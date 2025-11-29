@@ -58,7 +58,16 @@ export const PERSONAS: Persona[] = [
     name: "Harry Potter",
     category: "Movie",
     cover: "/personas/movie_harrypotter.webp",
-    prompt: buildPrompt("Wizarding World", "Magical fantasy academy aesthetic. Signature elements: Hogwarts house robes (Gryffindor/Slytherin style), wands, floating candles, magical sparks, ancient stone castle background. Lighting: Warm torchlight or mysterious moonlight. Atmosphere: Magical, wondrous, historical, whimsical.")
+    prompt: buildPrompt("Harry Potter", "Cinematic poster-style transformation inside the Wizarding World universe. The character should match the user's gender. Signature elements may appear naturally: magical sparks, floating candles, castle stone halls, robes, wands, enchanted ambience. Lighting: warm torchlight or cool moonlit magic. Atmosphere: wondrous, historical, whimsical, cinematic."
+)
+  },
+
+  {
+    id: "movie_minecraft",
+    name: "A Minecraft Movie",
+    category: "Movie",
+    cover: "/personas/movie_minecraft.webp",
+    prompt: buildPrompt("Minecraft Movie", "Live-action adaptation of Minecraft aesthetic. Signature elements: Realistic textures on blocky geometry, blue sheep, piglins, crafting tables, Steve's blue shirt, Overworld landscape with blocky trees and mountains. Lighting: Bright, cinematic outdoor lighting, vibrant colors. Atmosphere: Adventurous, quirky, surreal.")
   },
 
   // --- SERIES ---
@@ -124,6 +133,34 @@ export const PERSONAS: Persona[] = [
     category: "Series",
     cover: "/personas/series_tmkoc.webp",
     prompt: buildPrompt("Tarak Mehta Ka Ooltah Chashmah", "Indian sitcom style. Signature elements: Vibrant colorful traditional or casual Indian clothing, Gokuldham society compound background. Lighting: Very bright, high saturation, flat TV lighting. Atmosphere: Joyful, chaotic, family-friendly, expressive.")
+  },
+
+  // --- GAMES ---
+  {
+    id: "game_minecraft",
+    name: "Minecraft",
+    category: "Other",
+    cover: "/personas/game_minecraft.webp",
+    prompt: buildPrompt("Minecraft Game", "Voxel sandbox game aesthetic. Signature elements: Pixelated textures, blocky character model, diamond armor, sword/pickaxe, creeper in background, nether portal or village. Lighting: Bright day cycle or torch-lit cave darkness. Atmosphere: Creative, survival, blocky, retro-modern.")
+  },
+  {
+    id: "game_valorant",
+    name: "Valorant",
+    category: "Other",
+    cover: "/personas/game_valorant.webp",
+    prompt: buildPrompt("Valorant", "Transform into a new Valorant agent with unique style and implied abilities, Cinematic poster-style portrait of agent matching the user's gender; rendering must strictly follow official Riot Games Valorant art style, include authentic Valorant poster composition with diagonal shards, layered graphic map shapes, crisp color blocking, stylized UI accents, signature elements may appear such as agent ability motifs; final result must look like a real Valorant agent." 
+
+
+
+
+)
+  },
+  {
+    id: "game_cs",
+    name: "Counter-Strike",
+    category: "Other",
+    cover: "/personas/game_cs.webp",
+    prompt: buildPrompt("CS:GO / CS2 / Counter-Strike", "Realistic tactical shooter aesthetic. Signature elements: Tactical vests, helmets, AK-47 or M4A4, Dust II or Mirage map background, smoke grenades, bomb defusal kit. Lighting: Realistic outdoor sun or harsh industrial lighting. Atmosphere: Intense, gritty, military, competitive.")
   },
 
   // --- YOUTUBE ---

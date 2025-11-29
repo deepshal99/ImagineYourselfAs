@@ -61,6 +61,35 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   };
 
+  // Helper to load dynamic personas
+  const loadDiscoveredPersonas = async () => {
+      try {
+          const { data, error } = await supabase
+            .from('discovered_personas')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (data) {
+              const dynamicPersonas: Persona[] = data.map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  category: p.category as any, // Cast to PersonaCategory
+                  cover: p.cover,
+                  prompt: p.prompt
+              }));
+              
+              // Merge with static personas, avoiding duplicates if any
+              setPersonas(prev => {
+                  const existingIds = new Set(prev.map(p => p.id));
+                  const uniqueNew = dynamicPersonas.filter(p => !existingIds.has(p.id));
+                  return [...prev, ...uniqueNew];
+              });
+          }
+      } catch (e) {
+          console.error("Failed to load discovered personas", e);
+      }
+  };
+
   // Effect to load library based on auth state
   useEffect(() => {
     if (user) {
@@ -68,6 +97,8 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     } else {
         loadLocalLibrary();
     }
+    // Always load discovered personas
+    loadDiscoveredPersonas();
   }, [user]);
 
   const saveToLibrary = async (imageUrl: string, personaId: string) => {
@@ -167,6 +198,23 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const addPersonas = (newPersonas: Persona[]) => {
     setPersonas(prev => [...prev, ...newPersonas]);
+    
+    // Also save to Supabase if possible (optimistic)
+    // In a real app, the agent logic would likely insert into DB directly, 
+    // and we would just reload. But here we handle state + side-effect.
+    newPersonas.forEach(async (p) => {
+        try {
+            await supabase.from('discovered_personas').insert({
+                id: p.id,
+                name: p.name,
+                category: p.category,
+                cover: p.cover,
+                prompt: p.prompt
+            });
+        } catch (e) {
+            console.error("Failed to save discovered persona", e);
+        }
+    });
   };
 
   return (

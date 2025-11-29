@@ -43,6 +43,23 @@ const VIBE_PROMPTS = [
     prompt: "Hogwarts castle at night, floating candles, magical sparks, old parchment texture, wizarding world atmosphere, mysterious blue and gold lighting, no people"
   },
 
+  {
+    id: "movie_minecraft",
+    prompt: "Minecraft movie poster, live action style blue sheep and blocky trees, realistic textures on cubes, bright blue sky, adventure movie vibe, cinematic lighting, no people"
+  },
+  {
+    id: "game_minecraft",
+    prompt: "Minecraft game landscape, blocky mountains and trees, shader pack lighting, sunset, pixelated textures, diamond ore, sandbox game vibe, high quality, no people"
+  },
+  {
+    id: "game_valorant",
+    prompt: "Valorant map background, futuristic geometric architecture, radianite crates, floating islands, stylized cel-shaded art style, vibrant cyan and orange lighting, tactical shooter vibe, no people"
+  },
+  {
+    id: "game_cs",
+    prompt: "Counter-Strike Dust 2 map background, middle doors, sand textures, tactical military atmosphere, realistic lighting, bomb site crate, intense fps vibe, no people"
+  },
+
   // --- SERIES ---
   { 
     id: "series_stranger", 
@@ -170,10 +187,10 @@ const generate = async () => {
     
     // Generate specific IDs (New + Missing)
     const targetIds = [
-        "series_friends", 
-        "series_office", 
-        "series_twd", 
-        "series_tmkoc"
+        "movie_minecraft",
+        "game_minecraft", 
+        "game_valorant", 
+        "game_cs"
     ];
     
     for (const id of targetIds) {
