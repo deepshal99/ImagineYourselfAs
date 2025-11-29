@@ -22,7 +22,7 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
           </button>
         )}
         <h1 className="text-xl font-bold bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">
-          {title || "PersonaGen"}
+          {title || "PosterMe"}
         </h1>
       </div>
       

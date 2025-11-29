@@ -20,7 +20,8 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Load library from local storage on mount
   useEffect(() => {
-    const stored = localStorage.getItem('personagen_library');
+    // Rebrand: Use 'posterme_library'
+    const stored = localStorage.getItem('posterme_library');
     if (stored) {
       try {
         setLibrary(JSON.parse(stored));
@@ -39,13 +40,13 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
     const updated = [newCreation, ...library];
     setLibrary(updated);
-    localStorage.setItem('personagen_library', JSON.stringify(updated));
+    localStorage.setItem('posterme_library', JSON.stringify(updated));
   };
 
   const removeFromLibrary = (id: string) => {
     const updated = library.filter(item => item.id !== id);
     setLibrary(updated);
-    localStorage.setItem('personagen_library', JSON.stringify(updated));
+    localStorage.setItem('posterme_library', JSON.stringify(updated));
   };
 
   const addPersonas = (newPersonas: Persona[]) => {

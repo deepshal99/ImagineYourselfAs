@@ -1,4 +1,4 @@
-export type PersonaCategory = "Modern" | "Futuristic" | "Fantasy" | "Historical" | "Artistic" | "Aesthetic";
+export type PersonaCategory = "Movie" | "Series" | "YouTube" | "Other";
 
 export interface Persona {
   id: string;

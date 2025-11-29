@@ -1,5 +1,5 @@
 {
-  "name": "PersonaGen",
-  "description": "Transform your photos into unique personas using Gemini 3 Pro.",
+  "name": "PosterMe",
+  "description": "Transform any photo into a cinematic poster moment. Be the star of your own universe with PosterMe.",
   "requestFramePermissions": []
 }

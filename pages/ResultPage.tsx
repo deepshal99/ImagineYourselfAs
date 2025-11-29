@@ -39,7 +39,7 @@ const ResultPage: React.FC = () => {
 
   useEffect(() => {
     if (!uploadedImage || !selectedPersona) {
-      navigate('/personas');
+      navigate('/');
     }
   }, [uploadedImage, selectedPersona, navigate]);
 
@@ -66,12 +66,13 @@ const ResultPage: React.FC = () => {
         setLoading(false);
     } catch (err: any) {
         console.error("Generation failed:", err);
-        const errorMessage = err.toString();
+        const errorMessage = err.message || err.toString();
+        
         if (errorMessage.includes("Requested entity was not found")) {
             setWaitingForKey(true);
             setError(null);
         } else {
-            setError("Failed to generate persona. Please try again.");
+            setError(errorMessage);
         }
         setLoading(false);
     }
@@ -116,8 +117,6 @@ const ResultPage: React.FC = () => {
   };
 
   const handleDiscard = () => {
-      setUploadedImage(null);
-      setSelectedPersona(null);
       navigate('/');
   };
 
@@ -133,11 +132,11 @@ const ResultPage: React.FC = () => {
         {loading && !waitingForKey && (
             <div className="fixed inset-0 z-50 bg-[#09090b] flex flex-col items-center justify-center animate-fade-in">
                 <div className="relative mb-12">
-                    <div className="absolute inset-0 rounded-full blur-3xl bg-white/10 animate-pulse"></div>
-                    <div className="w-24 h-24 border-4 border-zinc-800 border-t-white rounded-full animate-spin relative z-10"></div>
+                    <div className="absolute inset-0 rounded-full blur-3xl bg-blue-600/20 animate-pulse"></div>
+                    <div className="w-24 h-24 border-4 border-zinc-800 border-t-blue-500 rounded-full animate-spin relative z-10"></div>
                 </div>
-                <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-zinc-200 to-zinc-500 mb-3 animate-pulse">Imagining...</h2>
-                <p className="text-zinc-500 font-medium">Transforming into {selectedPersona.name}</p>
+                <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white mb-3 animate-pulse">Creating Poster...</h2>
+                <p className="text-zinc-500 font-medium">Casting you as {selectedPersona.name}</p>
             </div>
         )}
 
@@ -157,20 +156,23 @@ const ResultPage: React.FC = () => {
 
             {/* Error */}
             {error && !loading && (
-                <div className="text-center animate-fade-in max-w-md">
+                <div className="text-center animate-fade-in max-w-lg">
                     <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Generation Failed</h3>
-                    <p className="text-zinc-400 mb-8">{error}</p>
-                    <button onClick={() => generateImage(true)} className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-zinc-200 transition-colors">Try Again</button>
+                    <h3 className="text-xl font-bold text-white mb-2">Poster Creation Failed</h3>
+                    <p className="text-zinc-400 mb-8 px-4 break-words">{error}</p>
+                    <div className="flex justify-center gap-4">
+                        <button onClick={handleDiscard} className="px-6 py-2 bg-zinc-800 text-white font-medium rounded-full hover:bg-zinc-700 transition-colors">Back</button>
+                        <button onClick={() => generateImage(true)} className="px-6 py-2 bg-white text-black font-bold rounded-full hover:bg-zinc-200 transition-colors">Try Again</button>
+                    </div>
                 </div>
             )}
 
             {/* Image Display */}
             {outputImage && !loading && (
                 <div className="relative group max-w-full max-h-[70vh] md:max-h-[85vh]">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-zinc-700 to-zinc-800 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/30 to-purple-600/30 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                     <img 
                         src={outputImage} 
                         alt="Result" 
@@ -187,7 +189,7 @@ const ResultPage: React.FC = () => {
                         label="Download" 
                         variant="primary"
                         onClick={handleDownload}
-                        icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>}
+                        icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>}
                     />
 
                     <ActionButton 
