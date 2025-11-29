@@ -41,10 +41,10 @@ export const PERSONAS: Persona[] = [
   },
   {
     id: "movie_barbie",
-    name: "Barbie World",
+    name: "Barbie The Movie",
     category: "Movie",
     cover: "/personas/movie_barbie.webp",
-    prompt: buildPrompt("Barbie", "Plastic fantastic pop-surrealism. Signature elements: Over-the-top stylish pink outfits, dreamhouse architecture, perfectly groomed styling, plastic textures. Lighting: Bright, high-key, sunny, technicolor. Atmosphere: Fun, energetic, artificial perfection.")
+    prompt: buildPrompt("Barbie (2023 Movie)", "Margot Robbie style live-action movie aesthetic. Signature elements: Western pink cowgirl/cowboy outfits or pink gingham dresses, plastic textures mixed with real fabrics, 'Barbieland' pastel architecture, blue sky with painted clouds, pink convertibles. Lighting: Bright, sunny, high-key studio lighting with a soft dreamlike glow. Atmosphere: Fun, feminist, self-aware, cinematic pop-art.")
   },
 
   // --- SERIES ---
