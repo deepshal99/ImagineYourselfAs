@@ -198,23 +198,6 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const addPersonas = (newPersonas: Persona[]) => {
     setPersonas(prev => [...prev, ...newPersonas]);
-    
-    // Also save to Supabase if possible (optimistic)
-    // In a real app, the agent logic would likely insert into DB directly, 
-    // and we would just reload. But here we handle state + side-effect.
-    newPersonas.forEach(async (p) => {
-        try {
-            await supabase.from('discovered_personas').insert({
-                id: p.id,
-                name: p.name,
-                category: p.category,
-                cover: p.cover,
-                prompt: p.prompt
-            });
-        } catch (e) {
-            console.error("Failed to save discovered persona", e);
-        }
-    });
   };
 
   return (

@@ -4,7 +4,6 @@ import { useImageContext } from '../context/ImageContext';
 import { getFallbackCoverUrl } from '../constants';
 import { Persona } from '../types';
 import Navigation from '../components/Navigation';
-import AgentHunter from '../components/AgentHunter';
 
 const UploadPage: React.FC = () => {
   const navigate = useNavigate();
@@ -118,8 +117,6 @@ const UploadPage: React.FC = () => {
                     <h2 className="text-xl font-bold text-white mb-2">2. Pick Your Poster</h2>
                     <p className="text-zinc-400 text-sm">Select a movie, series, or style to star in.</p>
                 </div>
-
-                <AgentHunter />
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                     {personas.map((persona) => (
