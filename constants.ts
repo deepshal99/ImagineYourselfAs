@@ -53,7 +53,7 @@ export const PERSONAS: Persona[] = [
     name: "Stranger Things",
     category: "Series",
     cover: "/personas/series_stranger.webp",
-    prompt: buildPrompt("Stranger Things", "80s retro sci-fi horror. Signature elements: 80s fashion (denim, colorful shirts, vests), bicycles, flashlights, dark forests, The Upside Down (red lightning, spores, vines). Lighting: Neon reds and blues against deep shadows. Atmosphere: Nostalgic, spooky, adventurous.")
+    prompt: buildPrompt("Stranger Things", "sci-fi horror. Signature elements: 80s fashion similar to stranger things characters, bicycles, flashlights, dark forests, The Upside Down (red lightning, spores, vines), mysterious demogorgon-like creature in background, Lighting: Neon reds and blues against deep shadows. Atmosphere: Nostalgic, spooky, adventurous, NOT Illustration")
   },
   {
     id: "series_thrones",
