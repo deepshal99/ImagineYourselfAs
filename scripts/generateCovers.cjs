@@ -168,20 +168,31 @@ const generate = async () => {
     // We do this by checking if they exist, and if so, deleting them first OR just overwriting.
     // The script below overwrites if I remove the existence check.
     
-    // Only generate Barbie for this update
-    const targetId = "movie_barbie";
-    const targetItem = VIBE_PROMPTS.find(p => p.id === targetId);
+    // Generate specific IDs (New + Missing)
+    const targetIds = [
+        "movie_batman", 
+        "movie_f1", 
+        "movie_harrypotter", 
+        "series_friends", 
+        "series_office", 
+        "series_twd", 
+        "series_bcs", 
+        "series_tmkoc"
+    ];
     
-    if (targetItem) {
-         const filename = `${targetItem.id}.webp`;
-         const filepath = path.join(OUTPUT_DIR, filename);
-         
-         if (fs.existsSync(filepath)) {
-             try {
-                fs.unlinkSync(filepath);
-             } catch(e) {}
-         }
-         await generateWithRetry(targetItem);
+    for (const id of targetIds) {
+        const item = VIBE_PROMPTS.find(p => p.id === id);
+        if (item) {
+             const filename = `${item.id}.webp`;
+             const filepath = path.join(OUTPUT_DIR, filename);
+             
+             if (fs.existsSync(filepath)) {
+                 try {
+                    fs.unlinkSync(filepath);
+                 } catch(e) {}
+             }
+             await generateWithRetry(item);
+        }
     }
     
     console.log(`\n✨ Generation process completed.`);
