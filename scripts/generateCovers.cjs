@@ -38,7 +38,7 @@ const VIBE_PROMPTS = [
   // --- SERIES ---
   { 
     id: "series_stranger", 
-    prompt: "Stranger Things iconic poster style, group of kids on bicycles in silhouette against a dark blue night sky with red lightning and a giant spider monster shadow, 80s retro horror aesthetic, neon title vibes" 
+    prompt: "Stranger Things cinematic poster, Eleven standing in front of a red glowing rift, dark blue foggy forest, retro 80s atmosphere, dramatic rim lighting, high detail, photorealistic style, full bleed, no borders" 
   },
   { 
     id: "series_thrones", 
