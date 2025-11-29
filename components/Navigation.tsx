@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import AuthButton from './AuthButton';
 
 const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, showBack = true }) => {
   const navigate = useNavigate();
@@ -26,16 +27,19 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
         </h1>
       </div>
       
-      <Link 
-        to="/library" 
-        className={`text-sm font-medium px-4 py-2 rounded-full transition-all duration-200
-          ${location.pathname === '/library' 
-            ? 'bg-zinc-800 text-white' 
-            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-          }`}
-      >
-        My Library
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link 
+            to="/library" 
+            className={`text-sm font-medium px-4 py-2 rounded-full transition-all duration-200
+            ${location.pathname === '/library' 
+                ? 'bg-zinc-800 text-white' 
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+            }`}
+        >
+            My Library
+        </Link>
+        <AuthButton />
+      </div>
     </nav>
   );
 };
