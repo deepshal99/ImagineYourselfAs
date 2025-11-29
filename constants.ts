@@ -46,6 +46,20 @@ export const PERSONAS: Persona[] = [
     cover: "/personas/movie_barbie.webp",
     prompt: buildPrompt("Barbie (2023 Movie)", "Margot Robbie style live-action movie aesthetic. Signature elements: Western pink cowgirl/cowboy outfits or pink gingham dresses, plastic textures mixed with real fabrics, 'Barbieland' pastel architecture, blue sky with painted clouds, pink convertibles. Lighting: Bright, sunny, high-key studio lighting with a soft dreamlike glow. Atmosphere: Fun, feminist, self-aware, cinematic pop-art.")
   },
+  {
+    id: "movie_f1",
+    name: "F1 Racing",
+    category: "Movie",
+    cover: "/personas/movie_f1.webp",
+    prompt: buildPrompt("F1 Racing Movie", "High-octane motorsport cinematic style. Signature elements: Professional racing suit with sponsor logos, holding a racing helmet, pit lane or race track background, motion blur of cars. Lighting: Harsh sunlight or dramatic stadium floodlights. Atmosphere: Adrenaline, speed, intense focus, competitive.")
+  },
+  {
+    id: "movie_harrypotter",
+    name: "Harry Potter",
+    category: "Movie",
+    cover: "/personas/movie_harrypotter.webp",
+    prompt: buildPrompt("Wizarding World", "Magical fantasy academy aesthetic. Signature elements: Hogwarts house robes (Gryffindor/Slytherin style), wands, floating candles, magical sparks, ancient stone castle background. Lighting: Warm torchlight or mysterious moonlight. Atmosphere: Magical, wondrous, historical, whimsical.")
+  },
 
   // --- SERIES ---
   {
@@ -75,6 +89,41 @@ export const PERSONAS: Persona[] = [
     category: "Series",
     cover: "/personas/series_breaking.webp",
     prompt: buildPrompt("Breaking Bad", "Gritty crime drama. Signature elements: Yellow hazmat suits, gas masks, desert landscapes, RVs, green shirts, pork pie hats. Lighting: Harsh desert sun, yellow color grading, wide angles. Atmosphere: Intense, dangerous, raw.")
+  },
+  {
+    id: "series_friends",
+    name: "Friends",
+    category: "Series",
+    cover: "/personas/series_friends.webp",
+    prompt: buildPrompt("Friends (90s Sitcom)", "Classic 90s sitcom aesthetic. Signature elements: 90s casual fashion (denim vests, turtlenecks, oversized sweaters), coffee mugs, Central Perk orange couch background or NYC apartment. Lighting: Warm, cozy, high-key sitcom lighting. Atmosphere: Friendly, nostalgic, cheerful, ensemble cast vibe.")
+  },
+  {
+    id: "series_office",
+    name: "The Office",
+    category: "Series",
+    cover: "/personas/series_office.webp",
+    prompt: buildPrompt("The Office (US)", "Mockumentary workplace comedy. Signature elements: Business casual office wear (ties, button-downs), Dunder Mifflin office background, looking directly at the camera (breaking the fourth wall). Lighting: Flat, realistic fluorescent office lighting. Atmosphere: Awkward, mundane, comedic, deadpan.")
+  },
+  {
+    id: "series_twd",
+    name: "The Walking Dead",
+    category: "Series",
+    cover: "/personas/series_twd.webp",
+    prompt: buildPrompt("The Walking Dead", "Post-apocalyptic survival horror. Signature elements: Grimy survival clothes, tactical gear, weapons (crossbow/revolver), sweat and dirt textures, abandoned overgrown streets or forest background. Lighting: Desaturated, gritty, high contrast, golden hour dust. Atmosphere: Desperate, rugged, intense survival.")
+  },
+  {
+    id: "series_bcs",
+    name: "Better Call Saul",
+    category: "Series",
+    cover: "/personas/series_bcs.webp",
+    prompt: buildPrompt("Better Call Saul", "Legal tragicomedy noir. Signature elements: Colorful flashy suits OR clean lawyer attire, desert background or courtroom, scales of justice. Lighting: Dramatic noir shadows or sun-bleached desert brightness, unique camera angles. Atmosphere: Slick, cunning, moral ambiguity.")
+  },
+  {
+    id: "series_tmkoc",
+    name: "TMKOC",
+    category: "Series",
+    cover: "/personas/series_tmkoc.webp",
+    prompt: buildPrompt("Tarak Mehta Ka Ooltah Chashmah", "Indian sitcom style. Signature elements: Vibrant colorful traditional or casual Indian clothing, Gokuldham society compound background. Lighting: Very bright, high saturation, flat TV lighting. Atmosphere: Joyful, chaotic, family-friendly, expressive.")
   },
 
   // --- YOUTUBE ---

@@ -32,7 +32,15 @@ const VIBE_PROMPTS = [
   },
   { 
     id: "movie_barbie", 
-    prompt: "Barbie Margot Robbie style character standing in a pink plastic dream house, wearing a pink gingham dress, waving, bright sunny lighting, pastel colors, fun movie poster style" 
+    prompt: "Margot Robbie as Barbie in the 2023 movie, wearing pink gingham dress, pink corvette in background, sunny Barbieland dreamhouse setting, pastel pink and blue colors, cinematic lighting, movie poster style" 
+  },
+  {
+    id: "movie_f1",
+    prompt: "Formula 1 racing poster background, blurred race cars on track, checkered flag motion, asphalt texture, stadium lights, adrenaline speed vibe, no people"
+  },
+  {
+    id: "movie_harrypotter",
+    prompt: "Hogwarts castle at night, floating candles, magical sparks, old parchment texture, wizarding world atmosphere, mysterious blue and gold lighting, no people"
   },
 
   // --- SERIES ---
@@ -51,6 +59,26 @@ const VIBE_PROMPTS = [
   { 
     id: "series_breaking", 
     prompt: "Walter White in yellow hazmat suit holding a beaker, blue smoke rising, RV in the desert background, gritty yellow filter, Breaking Bad poster style, intense" 
+  },
+  {
+    id: "series_friends",
+    prompt: "Central Perk coffee shop background, orange velvet couch, coffee mug on table, brick wall, neon sign, cozy 90s sitcom vibe, warm lighting, no people"
+  },
+  {
+    id: "series_office",
+    prompt: "Dunder Mifflin office desk background, white mug saying World's Best Boss, stapler in jello, fluorescent lighting, mundane office vibe, no people"
+  },
+  {
+    id: "series_twd",
+    prompt: "Post-apocalyptic abandoned highway, overgrown grass, abandoned cars, Sheriff hat on ground, gritty texture, desaturated Walking Dead poster style, no people"
+  },
+  {
+    id: "series_bcs",
+    prompt: "Better Call Saul poster background, scales of justice, colorful tie, desert road, yellow tint, legal drama vibe, cinematic shadow, no people"
+  },
+  {
+    id: "series_tmkoc",
+    prompt: "Gokuldham society building colorful facade, bright sunny day, playful atmosphere, indian sitcom poster background, vibrant colors, no people"
   },
 
   // --- YOUTUBE ---
@@ -140,22 +168,22 @@ const generate = async () => {
     // We do this by checking if they exist, and if so, deleting them first OR just overwriting.
     // The script below overwrites if I remove the existence check.
     
-    for (const item of VIBE_PROMPTS) {
-        const filename = `${item.id}.webp`;
-        const filepath = path.join(OUTPUT_DIR, filename);
-        
-        // Remove existing file to force regeneration with new character prompt
-        if (fs.existsSync(filepath)) {
+    // Only generate Barbie for this update
+    const targetId = "movie_barbie";
+    const targetItem = VIBE_PROMPTS.find(p => p.id === targetId);
+    
+    if (targetItem) {
+         const filename = `${targetItem.id}.webp`;
+         const filepath = path.join(OUTPUT_DIR, filename);
+         
+         if (fs.existsSync(filepath)) {
              try {
                 fs.unlinkSync(filepath);
-             } catch(e) {
-                console.log(`Could not delete ${filename}, trying to overwrite.`);
-             }
-        }
-
-        await generateWithRetry(item);
-        await sleep(BASE_DELAY_MS); 
+             } catch(e) {}
+         }
+         await generateWithRetry(targetItem);
     }
+    
     console.log(`\n✨ Generation process completed.`);
 };
 
