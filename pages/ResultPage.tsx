@@ -28,8 +28,7 @@ const ActionButton: React.FC<{
 
 const ResultPage: React.FC = () => {
   const navigate = useNavigate();
-  const { uploadedImage, selectedPersona, saveToLibrary, setUploadedImage, setSelectedPersona } = useImageContext();
-  const [outputImage, setOutputImage] = useState<string | null>(null);
+  const { uploadedImage, selectedPersona, saveToLibrary, setUploadedImage, setSelectedPersona, generatedImage, setGeneratedImage } = useImageContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [waitingForKey, setWaitingForKey] = useState(false);
@@ -45,6 +44,10 @@ const ResultPage: React.FC = () => {
 
   const generateImage = useCallback(async (isRetry = false) => {
     if (!uploadedImage || !selectedPersona) return;
+
+    if (generatedImage && !isRetry) {
+        return;
+    }
 
     setLoading(true);
     setError(null);
@@ -62,7 +65,7 @@ const ResultPage: React.FC = () => {
         }
 
         const result = await generatePersonaImage(uploadedImage, selectedPersona.prompt);
-        setOutputImage(result);
+        setGeneratedImage(result);
         setLoading(false);
     } catch (err: any) {
         console.error("Generation failed:", err);
@@ -80,9 +83,15 @@ const ResultPage: React.FC = () => {
 
   useEffect(() => {
     if (hasAttemptedRef.current || !uploadedImage || !selectedPersona) return;
+    
+    if (generatedImage) {
+        hasAttemptedRef.current = true;
+        return;
+    }
+
     hasAttemptedRef.current = true;
     generateImage();
-  }, [generateImage, uploadedImage, selectedPersona]);
+  }, [generateImage, uploadedImage, selectedPersona, generatedImage]);
 
   const handleKeySelection = async () => {
       const aistudio = (window as any).aistudio;
@@ -99,9 +108,9 @@ const ResultPage: React.FC = () => {
   };
 
   const handleDownload = () => {
-      if (outputImage && selectedPersona) {
+      if (generatedImage && selectedPersona) {
           const link = document.createElement('a');
-          link.href = outputImage;
+          link.href = generatedImage;
           link.download = `${selectedPersona.id}_${Date.now()}.png`; 
           document.body.appendChild(link);
           link.click();
@@ -110,8 +119,8 @@ const ResultPage: React.FC = () => {
   };
 
   const handleSave = () => {
-      if (outputImage && selectedPersona && !isSaved) {
-          saveToLibrary(outputImage, selectedPersona.id);
+      if (generatedImage && selectedPersona && !isSaved) {
+          saveToLibrary(generatedImage, selectedPersona.id);
           setIsSaved(true);
       }
   };
@@ -170,11 +179,11 @@ const ResultPage: React.FC = () => {
             )}
 
             {/* Image Display */}
-            {outputImage && !loading && (
+            {generatedImage && !loading && (
                 <div className="relative group max-w-full max-h-[70vh] md:max-h-[85vh]">
                     <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/30 to-purple-600/30 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                     <img 
-                        src={outputImage} 
+                        src={generatedImage} 
                         alt="Result" 
                         className="relative w-auto h-auto max-w-full max-h-[70vh] md:max-h-[85vh] object-contain rounded-xl shadow-2xl animate-scale-up"
                     />
@@ -183,7 +192,7 @@ const ResultPage: React.FC = () => {
         </div>
 
         {/* Right: Controls Area */}
-        {!loading && !waitingForKey && !error && outputImage && (
+        {!loading && !waitingForKey && !error && generatedImage && (
             <div className="h-auto md:h-full w-full md:w-32 bg-[#09090b]/95 backdrop-blur-md border-t md:border-t-0 md:border-l border-zinc-800/50 flex flex-row md:flex-col items-center justify-center gap-6 md:gap-10 py-6 px-4 z-20 shrink-0">
                     <ActionButton 
                         label="Download" 

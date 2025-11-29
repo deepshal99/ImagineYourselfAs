@@ -7,7 +7,7 @@ import Navigation from '../components/Navigation';
 
 const UploadPage: React.FC = () => {
   const navigate = useNavigate();
-  const { uploadedImage, setUploadedImage, selectedPersona, setSelectedPersona, personas } = useImageContext();
+  const { uploadedImage, setUploadedImage, selectedPersona, setSelectedPersona, personas, setGeneratedImage } = useImageContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,6 +16,7 @@ const UploadPage: React.FC = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setUploadedImage(reader.result as string);
+        setGeneratedImage(null);
       };
       reader.readAsDataURL(file);
     }
@@ -24,6 +25,7 @@ const UploadPage: React.FC = () => {
   const handleClearImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setUploadedImage(null);
+    setGeneratedImage(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -122,7 +124,12 @@ const UploadPage: React.FC = () => {
                             key={persona.id} 
                             persona={persona} 
                             isSelected={selectedPersona?.id === persona.id}
-                            onClick={() => setSelectedPersona(persona)}
+                            onClick={() => {
+                                if (selectedPersona?.id !== persona.id) {
+                                    setSelectedPersona(persona);
+                                    setGeneratedImage(null);
+                                }
+                            }}
                         />
                     ))}
                 </div>

@@ -47,7 +47,7 @@ export const PERSONAS: Persona[] = [
     name: "Stranger Things",
     category: "Series",
     cover: "/personas/series_stranger.webp",
-    prompt: buildPrompt("80s Hero", "Official Stranger Things season poster, photorealistic cinematic photography, wearing 80s denim jacket, dark spooky forest background with red fog and floating particles, dramatic rim lighting, mysterious atmosphere, film grain, 8k resolution, NOT illustration")
+    prompt: buildPrompt("80s Hero", "Official Stranger Things season poster, photorealistic cinematic photography, wearing 80s outfit similar to stranger things characters, dark spooky forest background with red fog and floating particles, dramatic rim lighting, mysterious atmosphere, demogorgon-like creature in background, film grain, 8k resolution, NOT illustration")
   },
   {
     id: "series_thrones",

@@ -1,7 +1,7 @@
 import React from 'react';
-import { useImageContext } from '../context/ImageContext';
+import { useImageContext } from "../context/ImageContext.tsx";
 import { PERSONAS } from '../constants';
-import Navigation from '../components/Navigation';
+import Navigation from "../components/Navigation.tsx";
 
 const LibraryPage: React.FC = () => {
   const { library, removeFromLibrary } = useImageContext();

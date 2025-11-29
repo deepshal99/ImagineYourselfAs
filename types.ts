@@ -23,4 +23,6 @@ export interface ImageContextType {
   library: SavedCreation[];
   saveToLibrary: (imageUrl: string, personaId: string) => void;
   removeFromLibrary: (id: string) => void;
+  generatedImage: string | null;
+  setGeneratedImage: (image: string | null) => void;
 }

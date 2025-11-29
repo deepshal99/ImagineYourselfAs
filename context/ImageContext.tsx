@@ -13,6 +13,7 @@ const ImageContext = createContext<ExtendedImageContextType | undefined>(undefin
 export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [library, setLibrary] = useState<SavedCreation[]>([]);
   
   // State to hold ALL personas (Static + AI Discovered)
@@ -60,6 +61,8 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
         setUploadedImage,
         selectedPersona,
         setSelectedPersona,
+        generatedImage,
+        setGeneratedImage,
         library,
         saveToLibrary,
         removeFromLibrary,
