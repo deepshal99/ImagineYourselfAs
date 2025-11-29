@@ -1,0 +1,5 @@
+{
+  "name": "PersonaGen",
+  "description": "Transform your photos into unique personas using Gemini 3 Pro.",
+  "requestFramePermissions": []
+}
