@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
 // These environment variables will be provided by the user in .env
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// We access them via process.env because they are explicitly defined in vite.config.ts
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing Supabase environment variables. Auth and DB features will be disabled.');
