@@ -62,23 +62,23 @@ const VIBE_PROMPTS = [
   },
   {
     id: "series_friends",
-    prompt: "Central Perk coffee shop background, orange velvet couch, coffee mug on table, brick wall, neon sign, cozy 90s sitcom vibe, warm lighting, no people"
+    prompt: "Group of 6 friends sitting on an orange velvet couch in a coffee shop, laughing and drinking coffee, 90s fashion denim and sweaters, cozy warm lighting, Central Perk vibe, view from behind or silhouette, no specific faces"
   },
   {
     id: "series_office",
-    prompt: "Dunder Mifflin office desk background, white mug saying World's Best Boss, stapler in jello, fluorescent lighting, mundane office vibe, no people"
+    prompt: "Office worker in a white shirt and tie looking at the camera with a deadpan expression, blurred busy office background with coworkers, fluorescent lighting, mockumentary style, slight motion blur, no specific faces"
   },
   {
     id: "series_twd",
-    prompt: "Post-apocalyptic abandoned highway, overgrown grass, abandoned cars, Sheriff hat on ground, gritty texture, desaturated Walking Dead poster style, no people"
+    prompt: "Silhouette of a survivor holding a crossbow walking down an abandoned highway, sunrise, overgrown grass, zombies in the distance in shadows, gritty texture, atmospheric survival horror"
   },
   {
     id: "series_bcs",
-    prompt: "Better Call Saul poster background, scales of justice, colorful tie, desert road, yellow tint, legal drama vibe, cinematic shadow, no people"
+    prompt: "Better Call Saul poster background, scales of justice, colorful tie, desert road, yellow tint, legal drama vibe, cinematic shadow, no people"      
   },
   {
     id: "series_tmkoc",
-    prompt: "Gokuldham society building colorful facade, bright sunny day, playful atmosphere, indian sitcom poster background, vibrant colors, no people"
+    prompt: "Group of neighbors in colorful Indian traditional clothes standing in a society courtyard, celebrating a festival, bright sunny day, joyful atmosphere, vibrant colors, view from a distance or back, no specific faces"
   },
 
   // --- YOUTUBE ---
@@ -170,13 +170,9 @@ const generate = async () => {
     
     // Generate specific IDs (New + Missing)
     const targetIds = [
-        "movie_batman", 
-        "movie_f1", 
-        "movie_harrypotter", 
         "series_friends", 
         "series_office", 
         "series_twd", 
-        "series_bcs", 
         "series_tmkoc"
     ];
     
