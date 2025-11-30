@@ -1,23 +1,154 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ImageContextType, Persona, SavedCreation } from '../types';
-import { PERSONAS } from '../constants';
-import { useAuth } from './AuthContext';
-import { supabase } from '../lib/supabase';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { ImageContextType, Persona, SavedCreation } from '../types.ts';
+import { PERSONAS } from '../constants.ts';
+import { useAuth } from './AuthContext.tsx';
+import { supabase } from '../lib/supabase.ts';
 
 // Extended Context to include dynamic persona management
 interface ExtendedImageContextType extends ImageContextType {
   personas: Persona[];
   addPersonas: (newPersonas: Persona[]) => void;
+  credits: number;
+  isUnlimited: boolean;
+  checkCredits: () => Promise<boolean>;
+  deductCredit: () => Promise<void>;
 }
 
+// @ts-ignore
 const ImageContext = createContext<ExtendedImageContextType | undefined>(undefined);
 
-export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ImageContextProvider = ({ children }: { children: any }) => {
   const { user } = useAuth();
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
+  
+  // Initialize state from localStorage if available
+  // @ts-ignore
+  const [uploadedImage, setUploadedImage] = useState<string | null>(() => {
+    return localStorage.getItem('posterme_uploaded_image');
+  });
+  
+  // @ts-ignore
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(() => {
+    const savedId = localStorage.getItem('posterme_selected_persona_id');
+    return savedId ? PERSONAS.find((p: Persona) => p.id === savedId) || null : null;
+  });
+
+  // @ts-ignore
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  // @ts-ignore
   const [library, setLibrary] = useState<SavedCreation[]>([]);
+  // @ts-ignore
+  const [credits, setCredits] = useState<number>(0);
+  // @ts-ignore
+  const [isUnlimited, setIsUnlimited] = useState<boolean>(false);
+
+  // Fetch credits
+  const fetchCredits = async () => {
+    if (!user) {
+        setCredits(0);
+        setIsUnlimited(false);
+        return;
+    }
+    
+    // Attempt lazy daily claim on load
+    try {
+        await supabase.rpc('claim_daily_credit');
+    } catch (_e) {
+        // Ignore error, just proceed to fetch
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('user_credits')
+            .select('credits, is_unlimited')
+            .eq('user_id', user.id)
+            .single();
+
+        if (data) {
+            setCredits(data.credits);
+            setIsUnlimited(data.is_unlimited || false);
+        } else if (error && error.code === 'PGRST116') {
+            setCredits(0);
+            setIsUnlimited(false);
+        }
+    } catch (e) {
+        console.error("Failed to fetch credits", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchCredits();
+  }, [user]);
+
+  const checkCredits = async (): Promise<boolean> => {
+      if (!user) return false;
+      await fetchCredits();
+      
+      // Attempt to claim daily credit first (lazy evaluation)
+      try {
+          const { data } = await supabase.rpc('claim_daily_credit');
+          if (data === true) {
+              await fetchCredits(); // Refresh if we just got a credit
+              return true; // We definitely have credit now
+          }
+      } catch (e) {
+          console.error("Failed to check daily claim", e);
+      }
+
+      const { data } = await supabase
+        .from('user_credits')
+        .select('credits, is_unlimited')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data?.is_unlimited) return true;
+      return (data?.credits || 0) > 0;
+  };
+
+  const deductCredit = async () => {
+      if (!user) return;
+      try {
+          // Check if unlimited locally before modifying UI
+          if (isUnlimited) return;
+
+          // Optimistic UI update
+          setCredits((prev: number) => Math.max(0, prev - 1));
+
+          const { data, error } = await supabase.rpc('consume_credit');
+          
+          if (error) throw error;
+          
+          if (data === false) {
+              fetchCredits();
+              throw new Error("Insufficient credits");
+          }
+      } catch (e) {
+          console.error("Failed to deduct credit", e);
+          fetchCredits();
+      }
+  };
+
+  
+  // Persist uploadedImage changes
+  useEffect(() => {
+    if (uploadedImage) {
+        try {
+            localStorage.setItem('posterme_uploaded_image', uploadedImage);
+        } catch (e) {
+            console.error("Failed to save image to local storage (likely too big)", e);
+        }
+    } else {
+        localStorage.removeItem('posterme_uploaded_image');
+    }
+  }, [uploadedImage]);
+
+  // Persist selectedPersona changes
+  useEffect(() => {
+    if (selectedPersona) {
+        localStorage.setItem('posterme_selected_persona_id', selectedPersona.id);
+    } else {
+        localStorage.removeItem('posterme_selected_persona_id');
+    }
+  }, [selectedPersona]);
   
   // State to hold ALL personas (Static + AI Discovered)
   const [personas, setPersonas] = useState<Persona[]>(PERSONAS);
@@ -48,7 +179,7 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
         if (error) throw error;
         
         if (data) {
-            const mapped: SavedCreation[] = data.map(item => ({
+            const mapped: SavedCreation[] = data.map((item: any) => ({
                 id: item.id,
                 personaId: item.persona_id,
                 imageUrl: item.image_url,
@@ -69,8 +200,14 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
             .select('*')
             .order('created_at', { ascending: false });
 
+          if (error) {
+             // Handle error if needed, but logging might be enough
+             // console.error("Error loading personas", error);
+             return; 
+          }
+
           if (data) {
-              const dynamicPersonas: Persona[] = data.map(p => ({
+              const dynamicPersonas: Persona[] = data.map((p: any) => ({
                   id: p.id,
                   name: p.name,
                   category: p.category as any, // Cast to PersonaCategory
@@ -79,9 +216,9 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
               }));
               
               // Merge with static personas, avoiding duplicates if any
-              setPersonas(prev => {
-                  const existingIds = new Set(prev.map(p => p.id));
-                  const uniqueNew = dynamicPersonas.filter(p => !existingIds.has(p.id));
+              setPersonas((prev: Persona[]) => {
+                  const existingIds = new Set(prev.map((p: any) => p.id));
+                  const uniqueNew = dynamicPersonas.filter((p: any) => !existingIds.has(p.id));
                   return [...prev, ...uniqueNew];
               });
           }
@@ -213,7 +350,11 @@ export const ImageContextProvider: React.FC<{ children: ReactNode }> = ({ childr
         saveToLibrary,
         removeFromLibrary,
         personas,
-        addPersonas
+        addPersonas,
+        credits,
+        isUnlimited,
+        checkCredits,
+        deductCredit
       }}
     >
       {children}

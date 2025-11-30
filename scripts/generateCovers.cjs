@@ -181,30 +181,15 @@ const generate = async () => {
     console.log(`\n🎨 Starting Character Cover Generation`);
     console.log(`Target Directory: ${OUTPUT_DIR}\n`);
 
-    // Force regeneration of existing files to apply new style
-    // We do this by checking if they exist, and if so, deleting them first OR just overwriting.
-    // The script below overwrites if I remove the existence check.
-    
-    // Generate specific IDs (New + Missing)
-    const targetIds = [
-        "movie_minecraft",
-        "game_minecraft", 
-        "game_valorant", 
-        "game_cs"
-    ];
-    
-    for (const id of targetIds) {
-        const item = VIBE_PROMPTS.find(p => p.id === id);
-        if (item) {
-             const filename = `${item.id}.webp`;
-             const filepath = path.join(OUTPUT_DIR, filename);
+    // Only generate files that don't exist yet
+    for (const item of VIBE_PROMPTS) {
+        const filename = `${item.id}.webp`;
+        const filepath = path.join(OUTPUT_DIR, filename);
              
-             if (fs.existsSync(filepath)) {
-                 try {
-                    fs.unlinkSync(filepath);
-                 } catch(e) {}
-             }
+        if (!fs.existsSync(filepath)) {
              await generateWithRetry(item);
+        } else {
+            // console.log(`Skipping ${filename} (Exists)`);
         }
     }
     
@@ -212,3 +197,4 @@ const generate = async () => {
 };
 
 generate();
+

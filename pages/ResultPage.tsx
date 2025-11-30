@@ -28,11 +28,12 @@ const ActionButton: React.FC<{
 
 const ResultPage: React.FC = () => {
   const navigate = useNavigate();
-  const { uploadedImage, selectedPersona, saveToLibrary, setUploadedImage, setSelectedPersona, generatedImage, setGeneratedImage } = useImageContext();
+  const { uploadedImage, selectedPersona, saveToLibrary, setUploadedImage, setSelectedPersona, generatedImage, setGeneratedImage, checkCredits, deductCredit } = useImageContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [waitingForKey, setWaitingForKey] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [creditsExhausted, setCreditsExhausted] = useState(false);
   
   const hasAttemptedRef = useRef(false);
 
@@ -46,6 +47,30 @@ const ResultPage: React.FC = () => {
     if (!uploadedImage || !selectedPersona) return;
 
     if (generatedImage && !isRetry) {
+        return;
+    }
+
+    // Check credits before generating (except for retries if we want to allow retry logic without double charge? 
+    // Usually one generation = one credit. If they retry, it consumes another.
+    // BUT user said "1 poster ONLY thats it", so retries should also be blocked or included in the 1 attempt?
+    // "Logged in user gets 1 credit and they can use that 1 credit to generate 1 poster ONLY thats it"
+    // This implies 1 successful generation.
+    // We should check credits first.
+    
+    // Note: If we already generated successfully, we shouldn't charge again for viewing, 
+    // but "Retry" generates a NEW image, so it should cost credit.
+    // However, since they have 1 credit total, they can't retry.
+    
+    const hasCredits = await checkCredits();
+    if (!hasCredits && !generatedImage) { // If already generated, we might be just viewing, but if generating new...
+        // Wait, if we are here, we are trying to generate.
+        setCreditsExhausted(true);
+        return;
+    }
+    
+    // Double check just in case state update lags
+    if (!hasCredits) {
+        setCreditsExhausted(true);
         return;
     }
 
@@ -65,6 +90,10 @@ const ResultPage: React.FC = () => {
         }
 
         const result = await generatePersonaImage(uploadedImage, selectedPersona.prompt);
+        
+        // Success! Deduct credit now.
+        await deductCredit();
+        
         setGeneratedImage(result);
         setLoading(false);
     } catch (err: any) {
@@ -79,7 +108,7 @@ const ResultPage: React.FC = () => {
         }
         setLoading(false);
     }
-  }, [uploadedImage, selectedPersona]);
+  }, [uploadedImage, selectedPersona, checkCredits, deductCredit]);
 
   useEffect(() => {
     if (hasAttemptedRef.current || !uploadedImage || !selectedPersona) return;
@@ -92,6 +121,11 @@ const ResultPage: React.FC = () => {
     hasAttemptedRef.current = true;
     generateImage();
   }, [generateImage, uploadedImage, selectedPersona, generatedImage]);
+
+  const handleCreditsExhaustedClose = () => {
+    // Maybe redirect to library or home?
+    navigate('/');
+  };
 
   const handleKeySelection = async () => {
       const aistudio = (window as any).aistudio;
@@ -137,6 +171,26 @@ const ResultPage: React.FC = () => {
       
       <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden relative">
         
+        {/* Credits Exhausted Modal */}
+        {creditsExhausted && !loading && (
+             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl relative text-center">
+                    <div className="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Credits Exhausted</h2>
+                    <p className="text-zinc-400 mb-8">You've used your free generation credit. We hope you enjoyed your poster!</p>
+                    
+                    <button 
+                        onClick={handleCreditsExhaustedClose}
+                        className="w-full bg-white text-black font-bold py-3 rounded-full hover:bg-zinc-200 transition-colors"
+                    >
+                        Back to Home
+                    </button>
+                </div>
+            </div>
+        )}
+
         {/* Full Screen Loading Overlay */}
         {loading && !waitingForKey && (
             <div className="fixed inset-0 z-50 bg-[#09090b] flex flex-col items-center justify-center animate-fade-in">
