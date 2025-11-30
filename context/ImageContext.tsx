@@ -4,18 +4,10 @@ import { PERSONAS } from '../constants.ts';
 import { useAuth } from './AuthContext.tsx';
 import { supabase } from '../lib/supabase.ts';
 
-// Extended Context to include dynamic persona management
-interface ExtendedImageContextType extends ImageContextType {
-  personas: Persona[];
-  addPersonas: (newPersonas: Persona[]) => void;
-  credits: number;
-  isUnlimited: boolean;
-  checkCredits: () => Promise<boolean>;
-  deductCredit: () => Promise<void>;
-}
+import { toast } from 'sonner';
 
 // @ts-ignore
-const ImageContext = createContext<ExtendedImageContextType | undefined>(undefined);
+const ImageContext = createContext<ImageContextType | undefined>(undefined);
 
 export const ImageContextProvider = ({ children }: { children: any }) => {
   const { user } = useAuth();
@@ -128,6 +120,94 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
   };
 
   
+  const buyCredits = async () => {
+      // Temporarily disabled
+      toast.info("Credit purchases are currently paused. Please check back later!");
+      return;
+      /*
+      if (!user) {
+          toast.error("Please sign in to buy credits");
+          return;
+      }
+      
+      const toastId = toast.loading("Initiating Instamojo payment...");
+
+      try {
+          const { data, error } = await supabase.functions.invoke('payment-handler', {
+              body: { 
+                  action: 'create_order',
+                  redirectUrl: window.location.href // Return to current page
+              }
+          });
+          
+          if (error) throw error;
+          if (!data.url) throw new Error("No payment URL received");
+
+          // Redirect to Instamojo
+          window.location.href = data.url;
+          
+      } catch (error: any) {
+          // Try to parse the internal error from the Edge Function if available
+          if (error && typeof error === 'object' && 'context' in error) {
+             try {
+                // @ts-ignore
+                const errorContext = await error.context.json();
+                console.error("Payment Edge Function Error:", errorContext);
+                if (errorContext.error) {
+                    toast.error(`Payment Failed: ${errorContext.error}`, { id: toastId });
+                    return;
+                }
+             } catch (e) {
+                console.error("Failed to parse payment error context", e);
+             }
+          }
+          
+          console.error("Buy credits failed", error);
+          toast.error(error.message || "Failed to initiate payment", { id: toastId });
+      }
+      */
+  };
+
+  // Check for Payment Return
+  useEffect(() => {
+      const checkPayment = async () => {
+          const query = new URLSearchParams(window.location.search);
+          const paymentId = query.get('payment_id');
+          const paymentRequestId = query.get('payment_request_id');
+          
+          if (paymentId && paymentRequestId && user) {
+              // Clear the URL immediately so we don't loop
+              window.history.replaceState({}, document.title, window.location.pathname);
+              
+              const toastId = toast.loading("Verifying payment...");
+              
+              try {
+                  const { data, error } = await supabase.functions.invoke('payment-handler', {
+                      body: {
+                          action: 'verify_payment',
+                          payment_id: paymentId,
+                          payment_request_id: paymentRequestId
+                      }
+                  });
+
+                  if (error) throw error;
+
+                  if (data.success) {
+                      toast.success("Payment successful! 5 credits added.", { id: toastId });
+                      fetchCredits();
+                  } else {
+                      toast.error(data.message || "Payment failed or pending.", { id: toastId });
+                  }
+              } catch (e: any) {
+                  console.error("Payment verification error", e);
+                  toast.error("Failed to verify payment.", { id: toastId });
+              }
+          }
+      };
+
+      checkPayment();
+  }, [user]); // Run when user is loaded
+
   // Persist uploadedImage changes
   useEffect(() => {
     if (uploadedImage) {
@@ -354,7 +434,8 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
         credits,
         isUnlimited,
         checkCredits,
-        deductCredit
+        deductCredit,
+        buyCredits
       }}
     >
       {children}

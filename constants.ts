@@ -134,6 +134,63 @@ export const PERSONAS: Persona[] = [
     cover: "/personas/series_tmkoc.webp",
     prompt: buildPrompt("Tarak Mehta Ka Ooltah Chashmah", "Indian sitcom style. Signature elements: Vibrant colorful traditional or casual Indian clothing, Gokuldham society compound background. Lighting: Very bright, high saturation, flat TV lighting. Atmosphere: Joyful, chaotic, family-friendly, expressive.")
   },
+  // --- NEW ADDITIONS ---
+  {
+    id: "movie_fast",
+    name: "Fast & Furious",
+    category: "Movie",
+    cover: "/personas/movie_fast.webp",
+    prompt: buildPrompt("Fast & Furious", "High-octane action blockbuster. Signature elements: Muscle cars, street racing scenes, tank tops, cross necklaces, family gatherings, explosions. Lighting: Glossy, high-contrast, sun-drenched Miami or gritty street neon. Atmosphere: Intense, cool, family-oriented, adrenaline-fueled.")
+  },
+  {
+    id: "movie_dictator",
+    name: "The Dictator",
+    category: "Movie",
+    cover: "/personas/movie_dictator.webp",
+    prompt: buildPrompt("The Dictator", "Satirical comedy. Signature elements: Extravagant military uniform with excessive medals, big beard, dark sunglasses, golden palace background, Wadiya flag. Lighting: Bright, sunny, opulent gold tones. Atmosphere: Comedic, outrageous, royal, absurd.")
+  },
+  {
+    id: "movie_jurassic",
+    name: "Jurassic Park",
+    category: "Movie",
+    cover: "/personas/movie_jurassic.webp",
+    prompt: buildPrompt("Jurassic Park", "Sci-fi adventure. Signature elements: Khaki safari gear, raincoats, flares, jungle ferns, T-Rex or Raptors lurking in background, iconic park gates. Lighting: Moody rainstorm darkness or bright tropical sun. Atmosphere: Awe-inspiring, terrifying, primal, epic.")
+  },
+  {
+    id: "series_money",
+    name: "Money Heist",
+    category: "Series",
+    cover: "/personas/series_money.webp",
+    prompt: buildPrompt("Money Heist (La Casa de Papel)", "Heist thriller. Signature elements: Red jumpsuits, Dali masks, Bank of Spain interior, floating money, weapons, team grouping. Lighting: Dramatic, high contrast, warm reddish tones. Atmosphere: Rebellious, tense, strategic, passionate.")
+  },
+  {
+    id: "series_alice",
+    name: "Alice in Borderland",
+    category: "Series",
+    cover: "/personas/series_alice.webp",
+    prompt: buildPrompt("Alice in Borderland", "Survival thriller. Signature elements: Dystopian deserted Tokyo streets, playing cards floating in air, survival gear, intense expressions, lasers. Lighting: Neon lights against abandoned city darkness. Atmosphere: Desperate, psychological, high-stakes, surreal.")
+  },
+  {
+    id: "series_mirzapur",
+    name: "Mirzapur",
+    category: "Series",
+    cover: "/personas/series_mirzapur.webp",
+    prompt: buildPrompt("Mirzapur", "Indian crime thriller. Signature elements: Rugged kurtas, shawls, aviator sunglasses, guns (desi kattas), carpets (kaleen), throne chair. Lighting: Warm, dusty, interior yellow bulbs or harsh sunlight. Atmosphere: Raw, power-hungry, violent, rustic.")
+  },
+  {
+    id: "series_panchayat",
+    name: "Panchayat",
+    category: "Series",
+    cover: "/personas/series_panchayat.webp",
+    prompt: buildPrompt("Panchayat", "Indian comedy-drama. Signature elements: Casual checked shirts, village office (Panchayat Bhawan) background, water tank, lauki (bottle gourd), rustic village setting. Lighting: Bright natural daylight, simple and unpretentious. Atmosphere: Heartwarming, funny, simple, realistic.")
+  },
+  {
+    id: "series_familyman",
+    name: "The Family Man",
+    category: "Series",
+    cover: "/personas/series_familyman.webp",
+    prompt: buildPrompt("The Family Man", "Espionage thriller. Signature elements: Generic middle-class office shirt but holding a gun hidden, Mumbai local train or city chaos background, TASC badge. Lighting: Gritty, realistic, slightly desaturated or blue-tinted. Atmosphere: Tense, dual-life, action-packed, grounded.")
+  },
 
   // --- GAMES ---
   {

@@ -25,4 +25,11 @@ export interface ImageContextType {
   removeFromLibrary: (id: string) => void;
   generatedImage: string | null;
   setGeneratedImage: (image: string | null) => void;
+  personas: Persona[];
+  addPersonas: (newPersonas: Persona[]) => void;
+  credits: number;
+  isUnlimited: boolean;
+  checkCredits: () => Promise<boolean>;
+  deductCredit: () => Promise<void>;
+  buyCredits: () => Promise<void>;
 }

@@ -1,75 +1,39 @@
-import { GoogleGenAI } from "@google/genai";
+import { supabase } from '../lib/supabase';
 
 export const generatePersonaImage = async (
   base64Image: string,
   prompt: string
 ): Promise<string> => {
-  
-  // Clean base64 string if it contains metadata prefix
-  const cleanBase64 = base64Image.split(',')[1] || base64Image;
-
-  // Use the defined process.env.API_KEY from vite config
-  const apiKey = process.env.API_KEY;
-  if (!apiKey || apiKey.includes('demo-key')) {
-      throw new Error("Invalid API Key. Please check your .env file.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
-  
   try {
-    console.log("Generating with model: gemini-3-pro-image-preview");
-    
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
-      contents: [
-        {
-          parts: [
-            {
-              inlineData: {
-                mimeType: 'image/jpeg',
-                data: cleanBase64
-              }
-            },
-            {
-              text: prompt
-            }
-          ]
-        }
-      ],
-      config: {
-        imageConfig: {
-            imageSize: '1K',
-            aspectRatio: '1:1',
-            imageCount: 1
-        }
-      }
+    const { data, error } = await supabase.functions.invoke('generate-poster', {
+      body: { base64Image, prompt },
     });
 
-    console.log("Gemini Response Candidates:", response.candidates?.length);
+    if (error) {
+      // CRITICAL: Try to parse the response body from the error context if available
+      let serverError = "Unknown Edge Function Error";
+      
+      if (error && typeof error === 'object' && 'context' in error) {
+         try {
+            // @ts-ignore
+            const errorContext = await error.context.json();
+            if (errorContext.error) serverError = errorContext.error;
+         } catch (e) {
+            // ignore
+         }
+      }
 
-    // Parse response for image data
-    if (response.candidates && response.candidates[0].content.parts) {
-        for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData) {
-                return `data:image/png;base64,${part.inlineData.data}`;
-            }
-        }
+      throw new Error(`Edge Function Failed: ${serverError}`);
     }
-    
-    // If we get here, no image was found in the parts
-    console.warn("Full Response:", JSON.stringify(response, null, 2));
-    throw new Error("Model returned no image data. Check if model supports image generation.");
+
+    if (!data || !data.image) {
+      throw new Error(data?.error || "No image returned from generation service");
+    }
+
+    return data.image;
 
   } catch (error: any) {
-    // Log the full error details to help debugging
-    console.error("Gemini Generation Error Details:", error);
-    
-    // Extract more specific error message if available
-    let errorMessage = error.message || "Unknown error";
-    if (error.response) {
-        errorMessage += ` (Status: ${error.response.status})`;
-    }
-    
-    throw new Error(`Gemini Error: ${errorMessage}`);
+    console.error("Generation Service Error:", error);
+    throw new Error(error.message || "Failed to generate poster");
   }
 };

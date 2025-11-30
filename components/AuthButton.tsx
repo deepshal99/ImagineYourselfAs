@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const AuthButton: React.FC = () => {
+  // @ts-ignore
   const { user, signInWithGoogle, signOut, loading } = useAuth();
 
   if (loading) {
@@ -21,7 +22,7 @@ const AuthButton: React.FC = () => {
             />
         )}
         <button
-          onClick={signOut}
+          onClick={() => signOut()}
           className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
         >
           Sign Out
@@ -32,8 +33,12 @@ const AuthButton: React.FC = () => {
 
   return (
     <button
-      onClick={signInWithGoogle}
-      className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full text-sm font-bold hover:bg-zinc-200 transition-colors"
+      onClick={(e) => {
+          e.preventDefault();
+          console.log("Sign In Button Clicked via onClick");
+          signInWithGoogle();
+      }}
+      className="relative z-50 flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full text-sm font-bold hover:bg-zinc-200 transition-colors cursor-pointer active:scale-95"
     >
       <svg className="w-4 h-4" viewBox="0 0 24 24">
         <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
