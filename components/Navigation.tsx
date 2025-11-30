@@ -51,15 +51,15 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                     </span>
                 </div>
                 
-                {!isUnlimited && (
-                    {/* Temporarily hidden as per request */}
-                    /* <button
+                {/* {!isUnlimited && (
+                    <button
                         onClick={buyCredits}
                         className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-600/10 border border-green-600/20 text-green-400 hover:bg-green-600/20 transition-colors text-sm font-medium"
                     >
                         <span>Buy 5 for ₹49</span>
-                    </button> */
-                )}
+                    </button>
+                )} */}
+
             </div>
         ) : !loading && (
              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
