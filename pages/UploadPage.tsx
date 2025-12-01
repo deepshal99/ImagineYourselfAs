@@ -49,7 +49,16 @@ const UploadPage: React.FC = () => {
   const { user } = useAuth();
   const { uploadedImage, setUploadedImage, selectedPersona, setSelectedPersona, personas, setGeneratedImage } = useImageContext();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>('All');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Filter personas based on category
+  const filteredPersonas = activeCategory === 'All' 
+    ? personas 
+    : personas.filter(p => p.category === activeCategory);
+
+  // Categories for the chips
+  const categories = ['All', 'Movie', 'Series', 'YouTube', 'Other'];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -161,13 +170,34 @@ const UploadPage: React.FC = () => {
         {/* RIGHT PANE: Persona Selection (Grid) */}
         <div className="flex-1 bg-[#09090b] relative md:h-full md:overflow-y-auto">
             <div className="p-6 md:p-8 pb-32">
-                <div className="mb-6 sticky top-0 bg-[#09090b]/95 backdrop-blur-sm z-20 py-2 border-b border-zinc-800/50">
-                    <h2 className="text-xl font-bold text-white mb-2">2. Pick Your Poster</h2>
-                    <p className="text-zinc-400 text-sm">Select a movie, series, or style to star in.</p>
+                <div className="mb-6 sticky top-0 bg-[#09090b]/95 backdrop-blur-sm z-20 pt-2 border-b border-zinc-800/50">
+                    <div className="flex flex-col gap-4 pb-4">
+                        <div>
+                            <h2 className="text-xl font-bold text-white mb-1">2. Pick Your Poster</h2>
+                            <p className="text-zinc-400 text-sm">Select a movie, series, or style to star in.</p>
+                        </div>
+                        
+                        {/* Category Chips */}
+                        <div className="flex gap-2 overflow-x-auto pb-4 pt-1 px-1 scrollbar-hide -mx-1">
+                            {categories.map((category) => (
+                                <button
+                                    key={category}
+                                    onClick={() => setActiveCategory(category)}
+                                    className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
+                                        activeCategory === category
+                                            ? 'bg-white text-black border-white shadow-lg shadow-white/10 scale-105 z-10'
+                                            : 'bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:bg-zinc-800 hover:border-zinc-600 hover:text-zinc-200'
+                                    }`}
+                                >
+                                    {category}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
-                    {personas.map((persona) => (
+                    {filteredPersonas.map((persona) => (
                         <PersonaCard 
                             key={persona.id} 
                             persona={persona} 
@@ -180,6 +210,12 @@ const UploadPage: React.FC = () => {
                             }}
                         />
                     ))}
+                    
+                    {filteredPersonas.length === 0 && (
+                        <div className="col-span-full py-12 text-center text-zinc-500">
+                            <p>No posters found in this category.</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

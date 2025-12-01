@@ -108,7 +108,7 @@ const LibraryPage: React.FC = () => {
                 </div>
 
                 {/* Sidebar / Controls (Right Side on Desktop, Bottom on Mobile) */}
-                <div className="w-full md:w-32 bg-[#09090b] md:border-l border-zinc-800 flex flex-row md:flex-col items-center justify-center gap-6 md:gap-8 py-6 px-4 shrink-0 z-20">
+                <div className="fixed bottom-0 left-0 right-0 md:static w-full md:w-32 bg-[#09090b]/95 backdrop-blur-md md:bg-[#09090b] border-t md:border-t-0 md:border-l border-zinc-800 flex flex-row md:flex-col items-center justify-evenly md:justify-center gap-2 md:gap-8 py-4 md:py-6 px-6 md:px-4 shrink-0 z-50 safe-area-bottom shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] md:shadow-none">
                     
                     {/* Close Button (Desktop) */}
                     <button 
@@ -140,26 +140,24 @@ const LibraryPage: React.FC = () => {
                             <div className="hidden md:flex flex-1"></div>
                         </>
                     ) : (
-                        <div className="flex flex-col items-center gap-6 animate-fade-in w-full">
-                            <div className="text-center md:mb-4">
+                        <div className="flex flex-row md:flex-col items-center justify-center gap-6 w-full animate-fade-in">
+                            <div className="hidden md:block text-center md:mb-4">
                                 <p className="text-red-400 font-bold mb-1">Delete Image?</p>
                                 <p className="text-zinc-500 text-xs">Cannot be undone.</p>
                             </div>
                             
-                            <div className="flex flex-row md:flex-col gap-6">
-                                <ActionButton 
-                                    label="Confirm" 
-                                    variant="danger"
-                                    onClick={confirmDelete}
-                                    icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5 10-10"/></svg>}
-                                />
-                                
-                                <ActionButton 
-                                    label="Cancel" 
-                                    onClick={cancelDelete}
-                                    icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>}
-                                />
-                            </div>
+                            <ActionButton 
+                                label="Confirm" 
+                                variant="danger"
+                                onClick={confirmDelete}
+                                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5 10-10"/></svg>}
+                            />
+                            
+                            <ActionButton 
+                                label="Cancel" 
+                                onClick={cancelDelete}
+                                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>}
+                            />
                         </div>
                     )}
                 </div>

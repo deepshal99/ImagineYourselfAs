@@ -28,7 +28,20 @@ const ActionButton: React.FC<{
 
 const ResultPage: React.FC = () => {
   const navigate = useNavigate();
-  const { uploadedImage, selectedPersona, saveToLibrary, setUploadedImage, setSelectedPersona, generatedImage, setGeneratedImage, checkCredits, deductCredit } = useImageContext();
+  const { 
+    uploadedImage, 
+    selectedPersona, 
+    saveToLibrary, 
+    setUploadedImage, 
+    setSelectedPersona, 
+    generatedImage, 
+    setGeneratedImage, 
+    checkCredits, 
+    deductCredit,
+    // Face description caching
+    cachedFaceDescription,
+    setCachedFaceDescription
+  } = useImageContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [waitingForKey, setWaitingForKey] = useState(false);
@@ -36,6 +49,8 @@ const ResultPage: React.FC = () => {
   const [creditsExhausted, setCreditsExhausted] = useState(false);
   
   const hasAttemptedRef = useRef(false);
+  // Request deduplication lock - prevents multiple simultaneous API calls
+  const isGeneratingRef = useRef(false);
 
   useEffect(() => {
     if (!uploadedImage || !selectedPersona) {
@@ -47,6 +62,12 @@ const ResultPage: React.FC = () => {
     if (!uploadedImage || !selectedPersona) return;
 
     if (generatedImage && !isRetry) {
+        return;
+    }
+
+    // REQUEST DEDUPLICATION: Prevent multiple simultaneous API calls
+    if (isGeneratingRef.current) {
+        console.log("Generation already in progress, ignoring duplicate request");
         return;
     }
 
@@ -74,6 +95,8 @@ const ResultPage: React.FC = () => {
         return;
     }
 
+    // Set deduplication lock
+    isGeneratingRef.current = true;
     setLoading(true);
     setError(null);
     setIsSaved(false);
@@ -84,17 +107,35 @@ const ResultPage: React.FC = () => {
             const hasKey = await aistudio.hasSelectedApiKey();
             if (!hasKey) {
                 setLoading(false);
+                isGeneratingRef.current = false;
                 setWaitingForKey(true);
                 return;
             }
         }
 
-        const result = await generatePersonaImage(uploadedImage, selectedPersona.prompt);
+        // COST OPTIMIZATION: Pass cached face description if available
+        // This saves one API call (vision model) when user tries multiple personas with the same photo
+        console.log(cachedFaceDescription 
+          ? "Using cached face description (saving 1 API call!)" 
+          : "No cached face description, will generate new one"
+        );
+        
+        const result = await generatePersonaImage(
+          uploadedImage, 
+          selectedPersona.prompt,
+          cachedFaceDescription // Pass cached description if available
+        );
         
         // Success! Deduct credit now.
         await deductCredit();
         
-        setGeneratedImage(result);
+        // Cache the face description for future generations with the same photo
+        if (result.faceDescription && !cachedFaceDescription) {
+            setCachedFaceDescription(result.faceDescription);
+            console.log("Cached new face description for future use");
+        }
+        
+        setGeneratedImage(result.image);
         setLoading(false);
     } catch (err: any) {
         console.error("Generation failed:", err);
@@ -103,12 +144,18 @@ const ResultPage: React.FC = () => {
         if (errorMessage.includes("Requested entity was not found")) {
             setWaitingForKey(true);
             setError(null);
+        } else if (errorMessage.includes("Duplicate request") || errorMessage.includes("already in progress")) {
+            // Don't show error for duplicate requests, just silently ignore
+            console.log("Duplicate request detected, ignoring");
         } else {
             setError(errorMessage);
         }
         setLoading(false);
+    } finally {
+        // Always release the deduplication lock
+        isGeneratingRef.current = false;
     }
-  }, [uploadedImage, selectedPersona, checkCredits, deductCredit]);
+  }, [uploadedImage, selectedPersona, checkCredits, deductCredit, cachedFaceDescription, setCachedFaceDescription]);
 
   useEffect(() => {
     if (hasAttemptedRef.current || !uploadedImage || !selectedPersona) return;
@@ -247,12 +294,12 @@ const ResultPage: React.FC = () => {
 
         {/* Right: Controls Area */}
         {!loading && !waitingForKey && !error && generatedImage && (
-            <div className="h-auto md:h-full w-full md:w-32 bg-[#09090b]/95 backdrop-blur-md border-t md:border-t-0 md:border-l border-zinc-800/50 flex flex-row md:flex-col items-center justify-center gap-6 md:gap-10 py-6 px-4 z-20 shrink-0">
+            <div className="fixed bottom-0 left-0 right-0 md:static h-auto md:h-full w-full md:w-32 bg-[#09090b]/95 backdrop-blur-md border-t md:border-t-0 md:border-l border-zinc-800/50 flex flex-row md:flex-col items-center justify-evenly md:justify-center gap-2 md:gap-10 py-4 md:py-6 px-6 md:px-4 z-50 shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] md:shadow-none safe-area-bottom">
                     <ActionButton 
                         label="Download" 
                         variant="primary"
                         onClick={handleDownload}
-                        icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>}
+                        icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>}
                     />
 
                     <ActionButton 
@@ -264,15 +311,14 @@ const ResultPage: React.FC = () => {
                         }
                     />
 
-                    <div className="w-8 h-px bg-zinc-800 md:w-px md:h-8 my-2"></div>
+                    {/* Divider only on desktop */}
+                    <div className="hidden md:block w-8 h-px bg-zinc-800 md:w-px md:h-8 my-2"></div>
 
                     <ActionButton 
                         label="Retry" 
                         onClick={() => generateImage(true)}
                         icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>}
                     />
-
-                    <div className="flex-1 md:hidden"></div>
 
                     <ActionButton 
                         label="Discard" 

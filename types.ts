@@ -32,4 +32,8 @@ export interface ImageContextType {
   checkCredits: () => Promise<boolean>;
   deductCredit: () => Promise<void>;
   buyCredits: () => Promise<void>;
+  // Face description caching for cost optimization
+  cachedFaceDescription: string | null;
+  setCachedFaceDescription: (desc: string | null) => void;
+  imageHash: string | null;
 }

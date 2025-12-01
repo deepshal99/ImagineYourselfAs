@@ -5,6 +5,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple in-memory deduplication cache (per instance)
+// Stores request hashes with timestamps to prevent duplicate rapid requests
+const recentRequests = new Map<string, number>();
+const DEDUP_WINDOW_MS = 5000; // 5 second window
+
+// Clean old entries periodically
+const cleanupDedup = () => {
+  const now = Date.now();
+  for (const [key, timestamp] of recentRequests.entries()) {
+    if (now - timestamp > DEDUP_WINDOW_MS) {
+      recentRequests.delete(key);
+    }
+  }
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -12,11 +27,39 @@ serve(async (req) => {
   }
 
   try {
-    const { base64Image, prompt } = await req.json();
+    // Accept optional cachedFaceDescription to skip vision API call
+    const { base64Image, prompt, cachedFaceDescription, requestId } = await req.json();
 
     if (!base64Image || !prompt) {
       throw new Error("Missing 'base64Image' or 'prompt' in request body");
     }
+
+    // ---------------------------------------------------------
+    // REQUEST DEDUPLICATION
+    // ---------------------------------------------------------
+    // Create a hash of the request to detect duplicates
+    const encoder = new TextEncoder();
+    const data = encoder.encode(`${base64Image.substring(0, 100)}:${prompt.substring(0, 50)}:${requestId || ''}`);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const requestHash = hashArray.slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    // Check for duplicate request within window
+    cleanupDedup();
+    const lastRequestTime = recentRequests.get(requestHash);
+    if (lastRequestTime && Date.now() - lastRequestTime < DEDUP_WINDOW_MS) {
+      console.log(`Duplicate request detected (hash: ${requestHash}), rejecting`);
+      return new Response(JSON.stringify({ 
+        error: "Duplicate request detected. Please wait a moment before retrying.",
+        isDuplicate: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 429,
+      });
+    }
+    
+    // Mark this request as in-progress
+    recentRequests.set(requestHash, Date.now());
 
     // Retrieve API Key
     const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -27,54 +70,48 @@ serve(async (req) => {
     const cleanBase64 = base64Image.split(',')[1] || base64Image;
 
     // ---------------------------------------------------------
-    // STEP 1: Describe the Face (Using Gemini 1.5 Flash)
+    // STEP 1: Describe the Face (Using Gemini 2.5 Flash)
+    // OPTIMIZATION: Skip if cachedFaceDescription is provided
     // ---------------------------------------------------------
-    // 0. DIAGNOSTIC: List Models
-    // This will help us see what models are actually available if we get 404s.
-    /*
-    try {
-        const listModelsUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-        const listResp = await fetch(listModelsUrl);
-        const listData = await listResp.json();
-        console.log("Available Models:", listData.models?.map((m:any) => m.name).join(", "));
-    } catch (e) {
-        console.error("Failed to list models", e);
-    }
-    */
-
-    // 1. First, describe the user's face using a Vision model
-    // We are using 'gemini-2.5-flash' as per the 2025 updates.
-    // If this fails, check the logs for the ListModels output (uncomment above if needed).
-    const visionUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    let faceDescription: string;
     
-    console.log("Step 1: Analyzing Face...");
-    const visionResponse = await fetch(visionUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { inline_data: { mime_type: 'image/jpeg', data: cleanBase64 } },
-            { text: "Describe the physical appearance of the person in this image in detail (gender, age, hair style/color, facial features, ethnicity). Be concise." }
-          ]
-        }]
-      })
-    });
+    if (cachedFaceDescription && typeof cachedFaceDescription === 'string' && cachedFaceDescription.length > 20) {
+      // Use cached description - saves one API call!
+      console.log("Step 1: Using CACHED face description (saving API call)");
+      faceDescription = cachedFaceDescription;
+    } else {
+      // Generate new face description
+      const visionUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      
+      console.log("Step 1: Analyzing Face (new request)...");
+      const visionResponse = await fetch(visionUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: 'image/jpeg', data: cleanBase64 } },
+              { text: "Describe the physical appearance of the person in this image in detail (gender, age, hair style/color, facial features, ethnicity). Be concise." }
+            ]
+          }]
+        })
+      });
 
-    if (!visionResponse.ok) {
-        const errText = await visionResponse.text();
-        console.error("Vision API Error:", errText);
-        throw new Error(`Vision Step Failed: ${errText}`);
+      if (!visionResponse.ok) {
+          const errText = await visionResponse.text();
+          console.error("Vision API Error:", errText);
+          throw new Error(`Vision Step Failed: ${errText}`);
+      }
+
+      const visionData = await visionResponse.json();
+      faceDescription = visionData.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!faceDescription) {
+          throw new Error("Failed to generate face description");
+      }
     }
 
-    const visionData = await visionResponse.json();
-    const faceDescription = visionData.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!faceDescription) {
-        throw new Error("Failed to generate face description");
-    }
-
-    console.log("Face Description:", faceDescription);
+    console.log("Face Description:", faceDescription.substring(0, 100) + "...");
 
 
     // ---------------------------------------------------------
@@ -165,7 +202,13 @@ serve(async (req) => {
         throw new Error(`No image data found. Model response: ${JSON.stringify(genData).substring(0, 200)}...`);
     }
 
-    return new Response(JSON.stringify({ image: resultImage }), {
+    // Return the image AND the face description (for client-side caching)
+    // This allows subsequent generations with the same photo to skip the vision API call
+    return new Response(JSON.stringify({ 
+      image: resultImage,
+      faceDescription: faceDescription, // Client should cache this!
+      cached: !!cachedFaceDescription // Indicates if we used cached description
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });

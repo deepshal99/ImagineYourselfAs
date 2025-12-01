@@ -8,6 +8,7 @@ import { Toaster } from 'sonner';
 const UploadPage = lazy(() => import("./pages/UploadPage.tsx"));
 const ResultPage = lazy(() => import("./pages/ResultPage.tsx"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage.tsx"));
+const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
 
 const LoadingSpinner = () => (
   <div className="min-h-screen w-full bg-[#09090b] flex items-center justify-center">
@@ -27,6 +28,7 @@ const App: React.FC = () => {
                 <Route path="/" element={<UploadPage />} />
                 <Route path="/result" element={<ResultPage />} />
                 <Route path="/library" element={<LibraryPage />} />
+                <Route path="/admin" element={<AdminPage />} />
                 {/* Catch-all redirect to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ImageContextType, Persona, SavedCreation } from '../types.ts';
 import { PERSONAS } from '../constants.ts';
 import { useAuth } from './AuthContext.tsx';
 import { supabase } from '../lib/supabase.ts';
+import { generateImageHash } from '../services/geminiService.ts';
 
 import { toast } from 'sonner';
 
@@ -32,6 +33,11 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
   const [credits, setCredits] = useState<number>(0);
   // @ts-ignore
   const [isUnlimited, setIsUnlimited] = useState<boolean>(false);
+  
+  // Face description caching for API cost optimization
+  // When a user tries multiple personas with the same photo, we reuse the face description
+  const [cachedFaceDescription, setCachedFaceDescription] = useState<string | null>(null);
+  const [imageHash, setImageHash] = useState<string | null>(null);
 
   // Fetch credits
   const fetchCredits = async () => {
@@ -208,7 +214,7 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
       checkPayment();
   }, [user]); // Run when user is loaded
 
-  // Persist uploadedImage changes
+  // Persist uploadedImage changes and compute hash for face description caching
   useEffect(() => {
     if (uploadedImage) {
         try {
@@ -216,8 +222,24 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
         } catch (e) {
             console.error("Failed to save image to local storage (likely too big)", e);
         }
+        
+        // Compute image hash for cache keying
+        generateImageHash(uploadedImage).then(hash => {
+            // Check if this is a new image (different hash)
+            if (hash !== imageHash) {
+                setImageHash(hash);
+                // Clear cached face description when image changes
+                setCachedFaceDescription(null);
+                console.log(`New image detected (hash: ${hash}), cleared face description cache`);
+            }
+        }).catch(e => {
+            console.error("Failed to compute image hash", e);
+        });
     } else {
         localStorage.removeItem('posterme_uploaded_image');
+        // Clear cache when image is removed
+        setImageHash(null);
+        setCachedFaceDescription(null);
     }
   }, [uploadedImage]);
 
@@ -292,14 +314,60 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
                   name: p.name,
                   category: p.category as any, // Cast to PersonaCategory
                   cover: p.cover,
-                  prompt: p.prompt
+                  prompt: p.prompt,
+                  // Add display order support
+                  display_order: p.display_order ?? 999,
+                  // Capture visibility explicitly from DB
+                  is_visible: p.is_visible
               }));
               
-              // Merge with static personas, avoiding duplicates if any
+              // Merge with static personas
               setPersonas((prev: Persona[]) => {
-                  const existingIds = new Set(prev.map((p: any) => p.id));
-                  const uniqueNew = dynamicPersonas.filter((p: any) => !existingIds.has(p.id));
-                  return [...prev, ...uniqueNew];
+                  // 1. Create a map of static personas for easy lookup
+                  // Default them to visible
+                  const combinedMap = new Map<string, any>();
+                  PERSONAS.forEach(p => {
+                      combinedMap.set(p.id, { 
+                          ...p, 
+                          is_visible: true,
+                          display_order: 999 // Default order
+                      });
+                  });
+                  
+                  // 2. Apply DB overrides and add new custom personas
+                  dynamicPersonas.forEach(dp => {
+                      if (combinedMap.has(dp.id)) {
+                          // OVERRIDE: Update existing static persona with DB values
+                          // This ensures is_visible: false from DB wins
+                          combinedMap.set(dp.id, { 
+                              ...combinedMap.get(dp.id), 
+                              ...dp 
+                          });
+                      } else {
+                          // ADD: New custom persona
+                          combinedMap.set(dp.id, dp);
+                      }
+                  });
+                  
+                  // 3. Convert back to array
+                  const combined = Array.from(combinedMap.values());
+                  
+                  // 4. Filter out hidden personas
+                  const visible = combined.filter((p: any) => p.is_visible !== false);
+
+                  // 5. Sort by display_order
+                  return visible.sort((a: any, b: any) => {
+                      // Use explicit order if available, otherwise default to 999
+                      // We treat -1 as "undefined/last" for safety
+                      const orderA = (a.display_order !== undefined && a.display_order !== -1) ? a.display_order : 999;
+                      const orderB = (b.display_order !== undefined && b.display_order !== -1) ? b.display_order : 999;
+                      
+                      // Primary sort: Order
+                      if (orderA !== orderB) return orderA - orderB;
+                      
+                      // Secondary sort: Name (stability)
+                      return (a.name || '').localeCompare(b.name || '');
+                  });
               });
           }
       } catch (e) {
@@ -435,7 +503,11 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
         isUnlimited,
         checkCredits,
         deductCredit,
-        buyCredits
+        buyCredits,
+        // Face description caching
+        cachedFaceDescription,
+        setCachedFaceDescription,
+        imageHash
       }}
     >
       {children}
