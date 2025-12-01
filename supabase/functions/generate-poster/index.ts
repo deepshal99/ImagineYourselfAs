@@ -129,7 +129,7 @@ serve(async (req) => {
     // 2. Generate the Poster using the requested model (Strictly)
     // We combine the original prompt with the face description AND the reference image
     // because gemini-3-pro-image-preview supports multimodal input.
-    const finalPrompt = `Movie poster style. ${prompt}. Use the attached reference image for the main character's face. The character should look exactly like the person in the image (Ethnicity: ${faceDescription}). High quality, cinematic lighting.`;
+    const finalPrompt = `Movie poster style. ${prompt}. Use the attached reference image for the main character's face. The character should look exactly like the person in the image (Ethnicity: ${faceDescription}). High quality, cinematic lighting. IMPORTANT: Do not include specific names in the credits (like '[Person's Name]') or large titles unless strictly necessary. If text is needed, use generic or illegible text for credits.`;
     
     console.log("Step 2: Generating Image with prompt:", finalPrompt);
 
@@ -213,11 +213,11 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Function Error:", error);
     // Return the ACTUAL error message to the client for debugging
     return new Response(JSON.stringify({ 
-        error: error.message,
+        error: error.message || "Unknown error",
         details: error.stack 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

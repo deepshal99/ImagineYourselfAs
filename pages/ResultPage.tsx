@@ -1,14 +1,17 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useImageContext } from '../context/ImageContext';
+import { useAuth } from '../context/AuthContext'; // Import Auth
+import { supabase } from '../lib/supabase'; // Correct import path
 import { generatePersonaImage } from '../services/geminiService';
 import Navigation from '../components/Navigation';
+import { toast } from 'sonner';
 
 const ActionButton: React.FC<{ 
     icon: React.ReactNode, 
     label: string, 
     onClick?: () => void,
-    variant?: 'default' | 'primary'
+    variant?: 'default' | 'primary' | 'active' // Added active variant
 }> = ({ icon, label, onClick, variant = 'default' }) => (
     <button 
         onClick={onClick}
@@ -17,6 +20,8 @@ const ActionButton: React.FC<{
         <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border border-transparent
             ${variant === 'primary' 
                 ? 'bg-white text-black hover:bg-zinc-200 hover:scale-110 hover:shadow-white/20' 
+                : variant === 'active'
+                ? 'bg-blue-600 text-white shadow-blue-500/30 scale-110'
                 : 'bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:scale-110 hover:border-zinc-600 backdrop-blur-sm'
             }`}
         >
@@ -28,6 +33,7 @@ const ActionButton: React.FC<{
 
 const ResultPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Get user
   const { 
     uploadedImage, 
     selectedPersona, 
@@ -47,7 +53,10 @@ const ResultPage: React.FC = () => {
   const [waitingForKey, setWaitingForKey] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [creditsExhausted, setCreditsExhausted] = useState(false);
+  const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null); // Feedback state
   
+  const [progress, setProgress] = useState(0); // Simulated progress
+
   const hasAttemptedRef = useRef(false);
   // Request deduplication lock - prevents multiple simultaneous API calls
   const isGeneratingRef = useRef(false);
@@ -57,6 +66,46 @@ const ResultPage: React.FC = () => {
       navigate('/');
     }
   }, [uploadedImage, selectedPersona, navigate]);
+
+  // Progress simulation effect
+  useEffect(() => {
+    let interval: number;
+    if (loading) {
+        setProgress(0);
+        interval = setInterval(() => {
+            setProgress(prev => {
+                // Slow down as we get closer to 90%
+                const increment = prev < 50 ? 5 : prev < 80 ? 2 : 0.5;
+                return Math.min(prev + increment, 95);
+            });
+        }, 500);
+    } else {
+        setProgress(100);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
+
+  const handleFeedback = async (type: 'like' | 'dislike') => {
+      if (!user || !selectedPersona) return;
+      if (feedback === type) return; // Prevent double click
+      
+      setFeedback(type);
+      
+      try {
+          await supabase.from('generation_feedback').insert({
+              user_id: user.id,
+              persona_id: selectedPersona.id,
+              feedback_type: type,
+              // We could store generatedImage url if we want to debug, 
+              // but it's a base64 string usually in local state, 
+              // and if we haven't saved it to storage yet, it might be too large or not useful.
+              // Ideally we only track 'persona_id' and prompts for quality tuning.
+          });
+          toast.success("Thanks for the feedback!");
+      } catch (error) {
+          console.error("Feedback error:", error);
+      }
+  };
 
   const generateImage = useCallback(async (isRetry = false) => {
     if (!uploadedImage || !selectedPersona) return;
@@ -100,6 +149,7 @@ const ResultPage: React.FC = () => {
     setLoading(true);
     setError(null);
     setIsSaved(false);
+    setFeedback(null); // Reset feedback on new generation
 
     try {
         const aistudio = (window as any).aistudio;
@@ -240,13 +290,20 @@ const ResultPage: React.FC = () => {
 
         {/* Full Screen Loading Overlay */}
         {loading && !waitingForKey && (
-            <div className="fixed inset-0 z-50 bg-[#09090b] flex flex-col items-center justify-center animate-fade-in">
-                <div className="relative mb-12">
+            <div className="fixed inset-0 z-50 bg-[#09090b] flex flex-col items-center justify-center animate-fade-in px-4">
+                <div className="relative mb-8">
                     <div className="absolute inset-0 rounded-full blur-3xl bg-blue-600/20 animate-pulse"></div>
                     <div className="w-24 h-24 border-4 border-zinc-800 border-t-blue-500 rounded-full animate-spin relative z-10"></div>
+                    <div className="absolute inset-0 flex items-center justify-center z-20">
+                        <span className="text-lg font-bold text-white">{Math.round(progress)}%</span>
+                    </div>
                 </div>
-                <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white mb-3 animate-pulse">Creating Poster...</h2>
-                <p className="text-zinc-500 font-medium">Casting you as {selectedPersona.name}</p>
+                <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white mb-3 animate-pulse text-center">
+                    Creating Poster...
+                </h2>
+                <p className="text-zinc-500 font-medium text-center">
+                    {['Movie', 'Series'].includes(selectedPersona.category) ? 'Casting you in' : 'Casting you as'} {selectedPersona.name}
+                </p>
             </div>
         )}
 
@@ -294,7 +351,7 @@ const ResultPage: React.FC = () => {
 
         {/* Right: Controls Area */}
         {!loading && !waitingForKey && !error && generatedImage && (
-            <div className="fixed bottom-0 left-0 right-0 md:static h-auto md:h-full w-full md:w-32 bg-[#09090b]/95 backdrop-blur-md border-t md:border-t-0 md:border-l border-zinc-800/50 flex flex-row md:flex-col items-center justify-evenly md:justify-center gap-2 md:gap-10 py-4 md:py-6 px-6 md:px-4 z-50 shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] md:shadow-none safe-area-bottom">
+            <div className="fixed bottom-0 left-0 right-0 md:static h-auto md:h-full w-full md:w-32 bg-[#09090b]/95 backdrop-blur-md border-t md:border-t-0 md:border-l border-zinc-800/50 flex flex-row md:flex-col items-center justify-evenly md:justify-center gap-2 md:gap-6 py-4 md:py-6 px-6 md:px-4 z-50 shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] md:shadow-none safe-area-bottom">
                     <ActionButton 
                         label="Download" 
                         variant="primary"
@@ -311,8 +368,19 @@ const ResultPage: React.FC = () => {
                         }
                     />
 
-                    {/* Divider only on desktop */}
-                    <div className="hidden md:block w-8 h-px bg-zinc-800 md:w-px md:h-8 my-2"></div>
+                    <ActionButton 
+                        label="Like" 
+                        variant={feedback === 'like' ? 'active' : 'default'}
+                        onClick={() => handleFeedback('like')}
+                        icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>}
+                    />
+                    
+                    <ActionButton 
+                        label="Dislike" 
+                        variant={feedback === 'dislike' ? 'active' : 'default'}
+                        onClick={() => handleFeedback('dislike')}
+                        icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" /></svg>}
+                    />
 
                     <ActionButton 
                         label="Retry" 

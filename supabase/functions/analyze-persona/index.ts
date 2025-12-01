@@ -83,7 +83,7 @@ serve(async (req) => {
     let result;
     try {
         result = JSON.parse(cleanJson);
-    } catch (e) {
+    } catch (e: any) {
         console.error("JSON Parse Error. Raw text:", text);
         console.error("Attempted Cleaned text:", cleanJson);
         
@@ -92,7 +92,7 @@ serve(async (req) => {
              // aggressive regex to keep only json characters? No that breaks strings.
              // Just return a friendly error.
              throw new Error(`Failed to parse AI response: ${e.message}`);
-        } catch (e2) {
+        } catch (_e2) {
              throw new Error("Failed to parse AI response. Please try again.");
         }
     }

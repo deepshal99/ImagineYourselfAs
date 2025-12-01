@@ -4,9 +4,11 @@ import { ImageContextProvider } from "./context/ImageContext.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { Toaster } from 'sonner';
 
-// Lazy load pages for better performance
-const UploadPage = lazy(() => import("./pages/UploadPage.tsx"));
-const ResultPage = lazy(() => import("./pages/ResultPage.tsx"));
+// Eager load critical pages for instant navigation
+import UploadPage from "./pages/UploadPage.tsx";
+import ResultPage from "./pages/ResultPage.tsx";
+
+// Lazy load secondary pages
 const LibraryPage = lazy(() => import("./pages/LibraryPage.tsx"));
 const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
 

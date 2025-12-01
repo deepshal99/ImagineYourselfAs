@@ -33,8 +33,8 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
   ).includes(user.email);
 
   return (
-    <nav className="w-full px-6 py-4 sticky top-0 z-40 bg-[#09090b]/80 backdrop-blur-md border-b border-zinc-800/50">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+    <nav className="w-full px-6 py-4 sticky top-0 z-[100] bg-[#09090b]/80 backdrop-blur-md border-b border-zinc-800/50">
+      <div className="w-full flex justify-between items-center">
         
         {/* Left: Back Button & Title */}
         <div className="flex items-center gap-4">

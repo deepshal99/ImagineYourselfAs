@@ -78,26 +78,26 @@ const LibraryPage: React.FC = () => {
 
       {/* Image Viewer Modal */}
       {selectedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-8 bg-black/95 backdrop-blur-sm animate-fade-in" onClick={handleClose}>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8 bg-black/95 backdrop-blur-sm animate-fade-in" onClick={handleClose}>
             <div 
-                className="relative w-full h-full md:max-w-6xl md:h-[90vh] flex flex-col md:flex-row bg-zinc-900 md:rounded-2xl overflow-hidden shadow-2xl border-none md:border border-zinc-800" 
+                className="relative w-full max-w-6xl max-h-[90vh] h-auto flex flex-col md:flex-row bg-zinc-900 md:rounded-2xl overflow-hidden shadow-2xl border border-zinc-800" 
                 onClick={e => e.stopPropagation()}
             >
                 
-                {/* Close Button (Mobile/Desktop) */}
+                {/* Close Button (Mobile/Desktop - Always visible in top right corner of modal) */}
                 <button 
                     onClick={handleClose}
-                    className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-black/80 transition-colors md:hidden"
+                    className="absolute top-4 right-4 z-[60] p-2 bg-black/50 text-white rounded-full hover:bg-black/80 transition-colors"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
 
                 {/* Image Section */}
-                <div className="flex-1 bg-black flex items-center justify-center p-4 relative group">
+                <div className="flex-1 bg-black flex items-center justify-center p-4 relative group min-h-0">
                     <img 
                         src={selectedImage.imageUrl} 
                         alt="View" 
-                        className="max-w-full max-h-[80vh] object-contain shadow-2xl"
+                        className="max-w-full max-h-[50vh] md:max-h-[85vh] w-auto h-auto object-contain shadow-2xl"
                     />
                     
                     {/* Metadata Overlay (Bottom) */}
@@ -108,21 +108,10 @@ const LibraryPage: React.FC = () => {
                 </div>
 
                 {/* Sidebar / Controls (Right Side on Desktop, Bottom on Mobile) */}
-                <div className="fixed bottom-0 left-0 right-0 md:static w-full md:w-32 bg-[#09090b]/95 backdrop-blur-md md:bg-[#09090b] border-t md:border-t-0 md:border-l border-zinc-800 flex flex-row md:flex-col items-center justify-evenly md:justify-center gap-2 md:gap-8 py-4 md:py-6 px-6 md:px-4 shrink-0 z-50 safe-area-bottom shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)] md:shadow-none">
+                <div className="w-full md:w-32 bg-[#09090b] border-t md:border-t-0 md:border-l border-zinc-800 flex flex-row md:flex-col items-center justify-evenly md:justify-center gap-4 py-4 md:py-6 px-4 shrink-0 z-50">
                     
-                    {/* Close Button (Desktop) */}
-                    <button 
-                        onClick={handleClose}
-                        className="hidden md:flex absolute top-4 right-4 p-2 text-zinc-500 hover:text-white transition-colors"
-                        title="Close"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    </button>
-
                     {!showDeleteConfirm ? (
                         <>
-                            <div className="hidden md:flex flex-1"></div>
-                            
                             <ActionButton 
                                 label="Download" 
                                 variant="primary"
@@ -136,14 +125,11 @@ const LibraryPage: React.FC = () => {
                                 onClick={handleDeleteClick}
                                 icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>}
                             />
-                            
-                            <div className="hidden md:flex flex-1"></div>
                         </>
                     ) : (
-                        <div className="flex flex-row md:flex-col items-center justify-center gap-6 w-full animate-fade-in">
+                        <div className="flex flex-row md:flex-col items-center justify-center gap-4 w-full animate-fade-in">
                             <div className="hidden md:block text-center md:mb-4">
-                                <p className="text-red-400 font-bold mb-1">Delete Image?</p>
-                                <p className="text-zinc-500 text-xs">Cannot be undone.</p>
+                                <p className="text-red-400 font-bold mb-1">Delete?</p>
                             </div>
                             
                             <ActionButton 

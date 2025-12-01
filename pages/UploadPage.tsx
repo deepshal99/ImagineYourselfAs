@@ -50,6 +50,8 @@ const UploadPage: React.FC = () => {
   const { uploadedImage, setUploadedImage, selectedPersona, setSelectedPersona, personas, setGeneratedImage } = useImageContext();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [isDragging, setIsDragging] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Filter personas based on category
@@ -79,6 +81,37 @@ const UploadPage: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setUploadedImage(reader.result as string);
+            setGeneratedImage(null);
+        };
+        reader.readAsDataURL(file);
+    } else if (file) {
+        // Optional: Toast error for invalid file type
+        console.warn("Invalid file type dropped");
+    }
+  };
+
   const handleImagine = () => {
     if (!uploadedImage || !selectedPersona) return;
 
@@ -87,6 +120,7 @@ const UploadPage: React.FC = () => {
         return;
     }
 
+    setIsNavigating(true);
     navigate('/result');
   };
 
@@ -110,7 +144,14 @@ const UploadPage: React.FC = () => {
                     {!uploadedImage ? (
                         <div 
                             onClick={() => fileInputRef.current?.click()}
-                            className="w-full aspect-[3/4] md:aspect-[3/4] max-w-[350px] md:max-w-full rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 hover:border-zinc-500 transition-all cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden"
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            className={`w-full aspect-[3/4] md:aspect-[3/4] max-w-[350px] md:max-w-full rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden
+                                ${isDragging 
+                                    ? 'border-blue-500 bg-blue-500/10 scale-105 shadow-xl' 
+                                    : 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 hover:border-zinc-500'
+                                }`}
                         >
                             <input
                                 type="file"
@@ -119,12 +160,14 @@ const UploadPage: React.FC = () => {
                                 accept="image/*"
                                 className="hidden"
                             />
-                            <div className="w-16 h-16 rounded-full bg-zinc-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform ${isDragging ? 'bg-blue-500 scale-110' : 'bg-zinc-700 group-hover:scale-110'}`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 ${isDragging ? 'text-white' : 'text-zinc-300'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                 </svg>
                             </div>
-                            <p className="text-lg font-medium text-zinc-200">Click to Upload</p>
+                            <p className={`text-lg font-medium ${isDragging ? 'text-blue-400' : 'text-zinc-200'}`}>
+                                {isDragging ? 'Drop Image Here' : 'Click or Drag to Upload'}
+                            </p>
                             <p className="text-xs text-zinc-500 mt-2">Start your cinematic transformation</p>
                         </div>
                     ) : (
@@ -224,14 +267,22 @@ const UploadPage: React.FC = () => {
         <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${uploadedImage && selectedPersona ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'}`}>
              <button
                 onClick={handleImagine}
-                className="group relative inline-flex items-center justify-center px-10 py-4 font-bold text-lg transition-all duration-200 bg-blue-600 text-white rounded-full hover:scale-105 hover:bg-blue-500 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] shadow-2xl ring-2 ring-white/10"
+                disabled={isNavigating}
+                className="group relative inline-flex items-center justify-center px-10 py-4 font-bold text-lg transition-all duration-200 bg-blue-600 text-white rounded-full hover:scale-105 hover:bg-blue-500 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] shadow-2xl ring-2 ring-white/10 disabled:opacity-80 disabled:scale-100 disabled:cursor-wait"
             >
-                <span className="flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                    </svg>
-                    Create Poster
-                </span>
+                {isNavigating ? (
+                    <span className="flex items-center gap-3">
+                        <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Starting...
+                    </span>
+                ) : (
+                    <span className="flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                        </svg>
+                        Create Poster
+                    </span>
+                )}
              </button>
         </div>
 
