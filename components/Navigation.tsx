@@ -27,10 +27,10 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
 
   // Check if user is admin
   const isAdmin = user?.email && (
-    import.meta.env.VITE_ADMIN_EMAILS?.split(',').map((e: string) => e.trim()) || [
-      'your-email@gmail.com'
-    ]
-  ).includes(user.email);
+    (import.meta.env.VITE_ADMIN_EMAILS || 'deepshal99@gmail.com')
+      .split(',')
+      .map((e: string) => e.trim().toLowerCase())
+  ).includes(user.email.toLowerCase());
 
   return (
     <nav className="w-full px-6 py-4 sticky top-0 z-[100] bg-[#09090b]/80 backdrop-blur-md border-b border-zinc-800/50">

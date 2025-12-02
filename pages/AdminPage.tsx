@@ -57,9 +57,9 @@ interface ManagedPersona extends Persona {
 // ADMIN EMAILS
 // ============================================================================
 const ADMIN_EMAILS = (
-  import.meta.env.VITE_ADMIN_EMAILS?.split(',').map((e: string) => e.trim()) || [
-    'your-email@gmail.com',
-  ]
+  (import.meta.env.VITE_ADMIN_EMAILS || 'deepshal99@gmail.com')
+    .split(',')
+    .map((e: string) => e.trim().toLowerCase())
 );
 
 // ============================================================================
@@ -755,14 +755,20 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
+        // Only redirect if explicitly on /admin route directly
+        // We handle this gracefully to avoid flickering if auth is slow
+        console.log("AdminPage: No user, redirecting");
         navigate('/');
         return;
       }
       
       const email = user.email?.toLowerCase() || '';
-      if (ADMIN_EMAILS.map((e: string) => e.toLowerCase()).includes(email)) {
+      console.log("AdminPage: Checking admin for", email, "Allowed:", ADMIN_EMAILS);
+      
+      if (ADMIN_EMAILS.includes(email)) {
         setIsAdmin(true);
       } else {
+        console.log("AdminPage: Access denied for", email);
         toast.error('Access denied. Admin privileges required.');
         navigate('/');
       }

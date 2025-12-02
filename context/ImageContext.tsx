@@ -30,14 +30,25 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
   // @ts-ignore
   const [library, setLibrary] = useState<SavedCreation[]>([]);
   // @ts-ignore
-  const [credits, setCredits] = useState<number>(0);
+  const [credits, setCredits] = useState<number>(() => {
+    const saved = localStorage.getItem('posterme_credits');
+    return saved ? parseInt(saved, 10) : 0;
+  });
   // @ts-ignore
-  const [isUnlimited, setIsUnlimited] = useState<boolean>(false);
+  const [isUnlimited, setIsUnlimited] = useState<boolean>(() => {
+    return localStorage.getItem('posterme_is_unlimited') === 'true';
+  });
   
   // Face description caching for API cost optimization
   // When a user tries multiple personas with the same photo, we reuse the face description
   const [cachedFaceDescription, setCachedFaceDescription] = useState<string | null>(null);
   const [imageHash, setImageHash] = useState<string | null>(null);
+
+  // Persist credits and unlimited status
+  useEffect(() => {
+    localStorage.setItem('posterme_credits', credits.toString());
+    localStorage.setItem('posterme_is_unlimited', String(isUnlimited));
+  }, [credits, isUnlimited]);
 
   // Fetch credits
   const fetchCredits = async () => {
