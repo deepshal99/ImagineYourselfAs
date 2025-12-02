@@ -36,4 +36,6 @@ export interface ImageContextType {
   cachedFaceDescription: string | null;
   setCachedFaceDescription: (desc: string | null) => void;
   imageHash: string | null;
+  showSuccessModal: boolean;
+  setShowSuccessModal: (show: boolean) => void;
 }

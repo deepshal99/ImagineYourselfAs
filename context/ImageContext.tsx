@@ -43,6 +43,7 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
   // When a user tries multiple personas with the same photo, we reuse the face description
   const [cachedFaceDescription, setCachedFaceDescription] = useState<string | null>(null);
   const [imageHash, setImageHash] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Persist credits and unlimited status
   useEffect(() => {
@@ -143,82 +144,114 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
 
   
   const buyCredits = async () => {
-      // Temporarily disabled
-      toast.info("Credit purchases are currently paused. Please check back later!");
-      return;
-      /*
       if (!user) {
           toast.error("Please sign in to buy credits");
           return;
       }
       
-      const toastId = toast.loading("Initiating Instamojo payment...");
+      const toastId = toast.loading("Initiating Payment...");
 
       try {
+          // Use origin + pathname + placeholder for Cashfree to inject the order_id
+          const returnUrl = window.location.origin + window.location.pathname + "?order_id={order_id}";
+
+          // 1. Create Order via Edge Function
           const { data, error } = await supabase.functions.invoke('payment-handler', {
               body: { 
                   action: 'create_order',
-                  redirectUrl: window.location.href // Return to current page
+                  returnUrl: returnUrl
               }
           });
           
           if (error) throw error;
-          if (!data.url) throw new Error("No payment URL received");
+          if (!data.payment_session_id) throw new Error("No payment session received");
 
-          // Redirect to Instamojo
-          window.location.href = data.url;
-          
-      } catch (error: any) {
-          // Try to parse the internal error from the Edge Function if available
-          if (error && typeof error === 'object' && 'context' in error) {
-             try {
-                // @ts-ignore
-                const errorContext = await error.context.json();
-                console.error("Payment Edge Function Error:", errorContext);
-                if (errorContext.error) {
-                    toast.error(`Payment Failed: ${errorContext.error}`, { id: toastId });
-                    return;
-                }
-             } catch (e) {
-                console.error("Failed to parse payment error context", e);
-             }
+          console.log("Payment Session Created:", data);
+
+          // 2. Initialize Cashfree SDK
+          // @ts-ignore
+          if (!window.Cashfree) {
+              throw new Error("Cashfree SDK not loaded");
           }
           
+          // @ts-ignore
+          const cashfree = new window.Cashfree({
+              mode: import.meta.env.PROD ? "production" : "sandbox"
+          });
+
+          // 3. Open Checkout
+          await cashfree.checkout({
+              paymentSessionId: data.payment_session_id,
+              redirectTarget: "_self" // Redirects the page
+          });
+          
+      } catch (error: any) {
           console.error("Buy credits failed", error);
-          toast.error(error.message || "Failed to initiate payment", { id: toastId });
+          
+          let errorMessage = error.message || "Failed to initiate payment";
+          
+          // Try to extract the actual error message from the Edge Function response
+          if (error && typeof error === 'object' && 'context' in error) {
+              try {
+                  const errorBody = await error.context.json();
+                  if (errorBody && errorBody.error) {
+                      errorMessage = errorBody.error;
+                      console.error("Edge Function Error Body:", errorBody);
+                  }
+              } catch (e) {
+                  // Failed to parse body
+              }
+          }
+
+          toast.error(errorMessage, { id: toastId });
       }
-      */
   };
 
-  // Check for Payment Return
+  // Check for Payment Return (Cashfree)
   useEffect(() => {
       const checkPayment = async () => {
           const query = new URLSearchParams(window.location.search);
-          const paymentId = query.get('payment_id');
-          const paymentRequestId = query.get('payment_request_id');
+          const orderId = query.get('order_id');
           
-          if (paymentId && paymentRequestId && user) {
-              // Clear the URL immediately so we don't loop
+          console.log("Checking Payment - URL Params:", window.location.search);
+          console.log("Checking Payment - Order ID:", orderId);
+          console.log("Checking Payment - User:", user ? user.id : "Not logged in");
+
+          if (orderId) {
+              if (!user) {
+                  console.log("Order ID found, waiting for user auth...");
+                  return; // Wait for user to be loaded
+              }
+
+              // Clear the URL immediately to prevent loops
               window.history.replaceState({}, document.title, window.location.pathname);
               
               const toastId = toast.loading("Verifying payment...");
+              console.log("Verifying Order ID with Backend:", orderId);
               
               try {
                   const { data, error } = await supabase.functions.invoke('payment-handler', {
                       body: {
                           action: 'verify_payment',
-                          payment_id: paymentId,
-                          payment_request_id: paymentRequestId
+                          order_id: orderId
                       }
                   });
 
-                  if (error) throw error;
+                  if (error) {
+                      console.error("Edge Function Error:", error);
+                      throw error;
+                  }
+                  
+                  console.log("Payment Verification Response:", data);
 
                   if (data.success) {
-                      toast.success("Payment successful! 5 credits added.", { id: toastId });
-                      fetchCredits();
+                      // Success! Show Modal
+                      toast.dismiss(toastId);
+                      setShowSuccessModal(true);
+                      await fetchCredits();
                   } else {
-                      toast.error(data.message || "Payment failed or pending.", { id: toastId });
+                      console.error("Payment failed reason:", data.message, data.status);
+                      toast.error(data.message || "Payment not completed.", { id: toastId });
                   }
               } catch (e: any) {
                   console.error("Payment verification error", e);
@@ -228,7 +261,7 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
       };
 
       checkPayment();
-  }, [user]); // Run when user is loaded
+  }, [user]);
 
   // Persist uploadedImage changes and compute hash for face description caching
   useEffect(() => {
@@ -523,7 +556,9 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
         // Face description caching
         cachedFaceDescription,
         setCachedFaceDescription,
-        imageHash
+        imageHash,
+        showSuccessModal,
+        setShowSuccessModal
       }}
     >
       {children}

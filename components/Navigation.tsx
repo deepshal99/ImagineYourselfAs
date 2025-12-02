@@ -6,11 +6,13 @@ import { useAuth } from '../context/AuthContext';
 const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, showBack = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { credits, isUnlimited } = useImageContext();
+  const { credits, isUnlimited, buyCredits } = useImageContext();
   const { user, loading, signInWithGoogle, signOut } = useAuth();
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCreditMenuOpen, setIsCreditMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const creditMenuRef = useRef<HTMLDivElement>(null);
 
   const isHome = location.pathname === '/';
   
@@ -19,6 +21,9 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
+      }
+      if (creditMenuRef.current && !creditMenuRef.current.contains(event.target as Node)) {
+        setIsCreditMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -64,25 +69,90 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
              <div className="w-8 h-8 rounded-full border-2 border-zinc-700 border-t-zinc-500 animate-spin"></div>
           ) : user ? (
             <>
-                {/* Credits Display */}
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
-                    isUnlimited || credits > 0 
-                        ? 'bg-zinc-800/50 border-zinc-700 text-zinc-300' 
-                        : 'bg-red-500/10 border-red-500/20 text-red-400'
-                }`}>
-                    {isUnlimited ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 12c-2-2.67-6-2.67-8 0a4 4 0 1 0 0 8c2 2.67 6 2.67 8 0a4 4 0 1 0 0-8Z"/>
-                            <path d="M12 12c2-2.67 6-2.67 8 0a4 4 0 1 1 0 8c-2 2.67-6 2.67-8 0a4 4 0 1 1 0-8Z"/>
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
-                        </svg>
+                {/* Credits Dropdown */}
+                <div className="relative" ref={creditMenuRef}>
+                    <button 
+                        onClick={() => !isUnlimited && setIsCreditMenuOpen(!isCreditMenuOpen)}
+                        disabled={isUnlimited}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all active:scale-95 ${
+                        isUnlimited || credits > 0 
+                            ? 'bg-zinc-800/50 border-zinc-700 text-zinc-300 hover:bg-zinc-800 cursor-pointer' 
+                            : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 cursor-pointer animate-pulse'
+                    } ${isUnlimited ? 'cursor-default hover:bg-zinc-800/50' : ''}`}
+                        title={isUnlimited ? "Unlimited Plan" : "Buy Credits"}
+                    >
+                        {isUnlimited ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 12c-2-2.67-6-2.67-8 0a4 4 0 1 0 0 8c2 2.67 6 2.67 8 0a4 4 0 1 0 0-8Z"/>
+                                <path d="M12 12c2-2.67 6-2.67 8 0a4 4 0 1 1 0 8c-2 2.67-6 2.67-8 0a4 4 0 1 1 0-8Z"/>
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                        <span className="text-xs font-bold">
+                            {isUnlimited ? 'PRO' : credits}
+                        </span>
+                        {!isUnlimited && (
+                             <span className="text-[10px] ml-1 bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                 Buy
+                             </span>
+                        )}
+                    </button>
+
+                    {/* Credit Dropdown Menu */}
+                    {isCreditMenuOpen && !isUnlimited && (
+                        <div className="absolute right-0 top-full mt-3 w-72 z-50 animate-scale-up origin-top-right">
+                             <div className="bg-[#09090b] border border-zinc-800 rounded-2xl shadow-2xl p-1 overflow-hidden">
+                                 <div className="p-4 bg-zinc-900/50 border-b border-zinc-800 rounded-t-xl">
+                                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Current Balance</p>
+                                     <p className="text-2xl font-bold text-white flex items-center gap-2">
+                                         {credits} <span className="text-sm font-normal text-zinc-500">Credits</span>
+                                     </p>
+                                 </div>
+                                 
+                                 <div className="p-4">
+                                     <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-xl p-4 relative overflow-hidden group hover:border-zinc-600 transition-colors">
+                                         {/* Badge */}
+                                         <div className="absolute top-0 right-0 bg-green-500 text-black text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                                             50% OFF
+                                         </div>
+
+                                         <div className="flex items-start gap-3 mb-3">
+                                             <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                 </svg>
+                                             </div>
+                                             <div>
+                                                 <h3 className="font-bold text-white text-sm">Starter Pack</h3>
+                                                 <p className="text-xs text-zinc-400">5 High Quality Generations</p>
+                                             </div>
+                                         </div>
+
+                                         <div className="flex items-end gap-2 mb-4">
+                                             <span className="text-2xl font-bold text-white">₹49</span>
+                                             <span className="text-sm text-zinc-500 line-through mb-1">₹99</span>
+                                         </div>
+
+                                         <button 
+                                             onClick={() => {
+                                                 buyCredits();
+                                                 setIsCreditMenuOpen(false);
+                                             }}
+                                             className="w-full bg-white text-black font-bold py-2 rounded-lg text-sm hover:bg-zinc-200 transition-colors active:scale-95 flex items-center justify-center gap-2"
+                                         >
+                                             Buy Now
+                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                             </svg>
+                                         </button>
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
                     )}
-                    <span className="text-xs font-bold">
-                        {isUnlimited ? 'PRO' : credits}
-                    </span>
                 </div>
 
                 {/* Profile Dropdown Container */}

@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 // Eager load critical pages for instant navigation
 import UploadPage from "./pages/UploadPage.tsx";
 import ResultPage from "./pages/ResultPage.tsx";
+import PaymentSuccessModal from "./components/PaymentSuccessModal.tsx";
 
 // Lazy load secondary pages
 const LibraryPage = lazy(() => import("./pages/LibraryPage.tsx"));
@@ -24,6 +25,7 @@ const App: React.FC = () => {
       <AuthProvider>
         <ImageContextProvider>
           <Toaster position="top-center" theme="dark" richColors closeButton />
+          <PaymentSuccessModal />
           <div className="min-h-screen w-full bg-[#09090b] text-zinc-100 selection:bg-white selection:text-black font-sans">
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>

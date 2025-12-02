@@ -44,6 +44,7 @@ const ResultPage: React.FC = () => {
     setGeneratedImage, 
     checkCredits, 
     deductCredit,
+    buyCredits,
     // Face description caching
     cachedFaceDescription,
     setCachedFaceDescription
@@ -276,11 +277,21 @@ const ResultPage: React.FC = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-2">Credits Exhausted</h2>
-                    <p className="text-zinc-400 mb-8">You've used your free generation credit. We hope you enjoyed your poster!</p>
+                    <p className="text-zinc-400 mb-6">You've used your free generation credit. We hope you enjoyed your poster!</p>
                     
                     <button 
+                        onClick={() => buyCredits()}
+                        className="w-full bg-green-600 text-white font-bold py-3 rounded-full hover:bg-green-500 transition-colors mb-3 flex items-center justify-center gap-2"
+                    >
+                        <span>Get 5 Credits for ₹49</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </button>
+
+                    <button 
                         onClick={handleCreditsExhaustedClose}
-                        className="w-full bg-white text-black font-bold py-3 rounded-full hover:bg-zinc-200 transition-colors"
+                        className="w-full bg-zinc-800 text-zinc-300 font-bold py-3 rounded-full hover:bg-zinc-700 transition-colors"
                     >
                         Back to Home
                     </button>
