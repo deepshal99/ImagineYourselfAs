@@ -120,27 +120,14 @@ const ResultPage: React.FC = () => {
         return;
     }
 
-    // Check credits before generating (except for retries if we want to allow retry logic without double charge? 
-    // Usually one generation = one credit. If they retry, it consumes another.
-    // BUT user said "1 poster ONLY thats it", so retries should also be blocked or included in the 1 attempt?
-    // "Logged in user gets 1 credit and they can use that 1 credit to generate 1 poster ONLY thats it"
-    // This implies 1 successful generation.
-    // We should check credits first.
-    
-    // Note: If we already generated successfully, we shouldn't charge again for viewing, 
-    // but "Retry" generates a NEW image, so it should cost credit.
-    // However, since they have 1 credit total, they can't retry.
-    
+    // Check credits before generating
     const hasCredits = await checkCredits();
-    if (!hasCredits && !generatedImage) { // If already generated, we might be just viewing, but if generating new...
-        // Wait, if we are here, we are trying to generate.
-        setCreditsExhausted(true);
-        return;
-    }
     
-    // Double check just in case state update lags
+    // If not logged in, they technically have 0 credits so this will block them, which is correct.
     if (!hasCredits) {
         setCreditsExhausted(true);
+        setLoading(false); // Ensure loading stops
+        isGeneratingRef.current = false; // Release lock
         return;
     }
 
@@ -164,11 +151,19 @@ const ResultPage: React.FC = () => {
         }
 
         // COST OPTIMIZATION: Pass cached face description if available
-        // This saves one API call (vision model) when user tries multiple personas with the same photo
         console.log(cachedFaceDescription 
           ? "Using cached face description (saving 1 API call!)" 
           : "No cached face description, will generate new one"
         );
+        
+        // Deduct credit *before* starting generation (optimistic)
+        // Or if we want to be strict: Reserve credit?
+        // Current requirement: "every generation = 1 credit STRICTLY"
+        // If we fail, we could refund, but standard practice for AI gen is usually deduction on initiation or success.
+        // User asked "try again should count as credit and users should not be allowed to try again if they don't have credits"
+        
+        // We will deduct AFTER success to be fair, but we MUST ensure they can't start if 0.
+        // We already checked 'hasCredits' above.
         
         const result = await generatePersonaImage(
           uploadedImage, 
@@ -177,6 +172,8 @@ const ResultPage: React.FC = () => {
         );
         
         // Success! Deduct credit now.
+        // If this fails (e.g. race condition), the server RPC should handle preventing negative balance if we used a db constraint,
+        // but here we are client side. The 'consume_credit' RPC is safe.
         await deductCredit();
         
         // Cache the face description for future generations with the same photo
@@ -197,6 +194,9 @@ const ResultPage: React.FC = () => {
         } else if (errorMessage.includes("Duplicate request") || errorMessage.includes("already in progress")) {
             // Don't show error for duplicate requests, just silently ignore
             console.log("Duplicate request detected, ignoring");
+        } else if (errorMessage.includes("Insufficient credits")) {
+             setCreditsExhausted(true);
+             setError(null);
         } else {
             setError(errorMessage);
         }
@@ -205,7 +205,7 @@ const ResultPage: React.FC = () => {
         // Always release the deduplication lock
         isGeneratingRef.current = false;
     }
-  }, [uploadedImage, selectedPersona, checkCredits, deductCredit, cachedFaceDescription, setCachedFaceDescription]);
+  }, [uploadedImage, selectedPersona, checkCredits, deductCredit, cachedFaceDescription, setCachedFaceDescription, generatedImage]);
 
   useEffect(() => {
     if (hasAttemptedRef.current || !uploadedImage || !selectedPersona) return;

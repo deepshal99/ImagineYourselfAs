@@ -120,19 +120,24 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
           if (isUnlimited) return;
 
           // Optimistic UI update
-          setCredits((prev: number) => Math.max(0, prev - 1));
+          setCredits((prev: number) => {
+              const newVal = Math.max(0, prev - 1);
+              return newVal;
+          });
 
           const { data, error } = await supabase.rpc('consume_credit');
           
           if (error) throw error;
           
+          // data is boolean success
           if (data === false) {
-              fetchCredits();
+              fetchCredits(); // Re-sync with server true value
               throw new Error("Insufficient credits");
           }
       } catch (e) {
           console.error("Failed to deduct credit", e);
-          fetchCredits();
+          fetchCredits(); // Re-sync on error
+          throw e; // Propagate error so caller knows it failed
       }
   };
 

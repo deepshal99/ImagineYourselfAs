@@ -73,6 +73,18 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
     } catch (error) {
       console.error("Error signing out:", error);
+    } finally {
+      // Force clear local state even if network request fails
+      setSession(null);
+      setUser(null);
+      localStorage.removeItem('posterme_uploaded_image');
+      localStorage.removeItem('posterme_selected_persona_id');
+      localStorage.removeItem('posterme_credits');
+      localStorage.removeItem('posterme_is_unlimited');
+      localStorage.removeItem('posterme_library'); // Optional: clear guest library if needed, but maybe keep it?
+      // Keeping guest library might be good if they login again, but for security/privacy on logout usually clear.
+      // Assuming we want to clear everything:
+      // localStorage.clear(); // Too aggressive?
     }
   };
 
