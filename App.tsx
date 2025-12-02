@@ -8,6 +8,8 @@ import { Toaster } from 'sonner';
 import UploadPage from "./pages/UploadPage.tsx";
 import ResultPage from "./pages/ResultPage.tsx";
 import PaymentSuccessModal from "./components/PaymentSuccessModal.tsx";
+import Footer from "./components/Footer.tsx";
+import { TermsPage, RefundPage, ContactPage, PrivacyPage } from "./pages/LegalPages.tsx";
 
 // Lazy load secondary pages
 const LibraryPage = lazy(() => import("./pages/LibraryPage.tsx"));
@@ -26,17 +28,25 @@ const App: React.FC = () => {
         <ImageContextProvider>
           <Toaster position="top-center" theme="dark" richColors closeButton />
           <PaymentSuccessModal />
-          <div className="min-h-screen w-full bg-[#09090b] text-zinc-100 selection:bg-white selection:text-black font-sans">
+          <div className="min-h-screen w-full bg-[#09090b] text-zinc-100 selection:bg-white selection:text-black font-sans flex flex-col">
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 <Route path="/" element={<UploadPage />} />
                 <Route path="/result" element={<ResultPage />} />
                 <Route path="/library" element={<LibraryPage />} />
                 <Route path="/admin" element={<AdminPage />} />
+                
+                {/* Legal Pages */}
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/refund-policy" element={<RefundPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                
                 {/* Catch-all redirect to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
+            <Footer />
           </div>
         </ImageContextProvider>
       </AuthProvider>
