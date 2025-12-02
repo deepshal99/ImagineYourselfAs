@@ -172,10 +172,9 @@ const ResultPage: React.FC = () => {
           cachedFaceDescription // Pass cached description if available
         );
         
-        // Success! Deduct credit now.
-        // If this fails (e.g. race condition), the server RPC should handle preventing negative balance if we used a db constraint,
-        // but here we are client side. The 'consume_credit' RPC is safe.
-        await deductCredit();
+        // Success! Credit was deducted server-side.
+        // Refresh local credits to sync UI
+        await checkCredits();
         
         // Cache the face description for future generations with the same photo
         if (result.faceDescription && !cachedFaceDescription) {

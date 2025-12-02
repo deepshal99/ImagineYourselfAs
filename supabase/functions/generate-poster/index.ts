@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,8 +27,68 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  let creditDeducted = false;
+  let userForRefund = null;
+
   try {
-    // Accept optional cachedFaceDescription to skip vision API call
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+        throw new Error('Missing Authorization header');
+    }
+
+    // Initialize Supabase Client acting AS THE USER
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Initialize Admin Client for Refunds (Service Role)
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Verify the token is valid
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+
+    if (authError || !user) {
+        throw new Error('Invalid user token');
+    }
+    userForRefund = user;
+
+    // 3. Deduct Credit (Atomic Operation)
+    // The RPC 'consume_credit' returns true if successful (or unlimited), false if insufficient
+    const { data: creditSuccess, error: creditError } = await supabaseClient.rpc('consume_credit');
+
+    if (creditError) {
+        throw new Error(`Credit check failed: ${creditError.message}`);
+    }
+
+    if (!creditSuccess) {
+        throw new Error("Insufficient credits. Please purchase more.");
+    }
+    
+    // Check if user is unlimited to know if we need to refund
+    // Wait, consume_credit returns TRUE for unlimited too.
+    // If we refund blindly, unlimited users gain credits!
+    // We need to know if we ACTUALLY deducted.
+    // The current 'consume_credit' returns boolean success, not "deducted count".
+    // However, checking 'is_unlimited' first is safer.
+    
+    // Let's check if user is unlimited first using admin client (or user client)
+    const { data: creditData } = await supabaseClient
+        .from('user_credits')
+        .select('is_unlimited')
+        .eq('user_id', user.id)
+        .single();
+        
+    const isUnlimited = creditData?.is_unlimited;
+    if (!isUnlimited) {
+        creditDeducted = true;
+    }
+
+    // 4. Parse Request
     const { base64Image, prompt, cachedFaceDescription, requestId } = await req.json();
 
     if (!base64Image || !prompt) {
@@ -215,6 +276,35 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error("Function Error:", error);
+
+    // Attempt Refund if credit was deducted
+    if (creditDeducted && userForRefund) {
+        try {
+            console.log(`Refunding credit for user ${userForRefund.id} due to failure...`);
+            // Re-init Admin Client for refund
+            const refundClient = createClient(
+                Deno.env.get('SUPABASE_URL') ?? '',
+                Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+            );
+            
+            const { data: curr } = await refundClient
+                .from('user_credits')
+                .select('credits')
+                .eq('user_id', userForRefund.id)
+                .single();
+            
+            if (curr) {
+                await refundClient
+                    .from('user_credits')
+                    .update({ credits: curr.credits + 1 })
+                    .eq('user_id', userForRefund.id);
+                console.log("Refund successful.");
+            }
+        } catch (refundError) {
+            console.error("CRITICAL: Failed to refund credit!", refundError);
+        }
+    }
+
     // Return the ACTUAL error message to the client for debugging
     return new Response(JSON.stringify({ 
         error: error.message || "Unknown error",
