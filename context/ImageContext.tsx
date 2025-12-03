@@ -13,11 +13,9 @@ const ImageContext = createContext<ImageContextType | undefined>(undefined);
 export const ImageContextProvider = ({ children }: { children: any }) => {
   const { user } = useAuth();
   
-  // Initialize state from localStorage if available
+  // Initialize state (don't load from localStorage - images are too large)
   // @ts-ignore
-  const [uploadedImage, setUploadedImage] = useState<string | null>(() => {
-    return localStorage.getItem('posterme_uploaded_image');
-  });
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   
   // @ts-ignore
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(() => {
@@ -266,11 +264,9 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
   // Persist uploadedImage changes and compute hash for face description caching
   useEffect(() => {
     if (uploadedImage) {
-        try {
-            localStorage.setItem('posterme_uploaded_image', uploadedImage);
-        } catch (e) {
-            console.error("Failed to save image to local storage (likely too big)", e);
-        }
+        // Don't persist to localStorage - images are too large and exceed quota
+        // We'll keep them in React state only (memory)
+        // localStorage is better for small metadata, not base64 images
         
         // Compute image hash for cache keying
         generateImageHash(uploadedImage).then(hash => {
@@ -285,7 +281,6 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
             console.error("Failed to compute image hash", e);
         });
     } else {
-        localStorage.removeItem('posterme_uploaded_image');
         // Clear cache when image is removed
         setImageHash(null);
         setCachedFaceDescription(null);

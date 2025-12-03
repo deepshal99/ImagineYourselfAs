@@ -8,7 +8,7 @@
 -- ==========================
 ALTER TABLE public.user_credits ENABLE ROW LEVEL SECURITY;
 
--- Drop ALL existing policies
+-- Drop ALL existing policies (including new ones if rerunning)
 DROP POLICY IF EXISTS "Users can view own credits" ON public.user_credits;
 DROP POLICY IF EXISTS "Users can update own credits" ON public.user_credits;
 DROP POLICY IF EXISTS "Users can insert own credits" ON public.user_credits;
@@ -16,6 +16,9 @@ DROP POLICY IF EXISTS "Admin can manage all credits" ON public.user_credits;
 DROP POLICY IF EXISTS "Service role can manage all credits" ON public.user_credits;
 DROP POLICY IF EXISTS "Admin can view all credits" ON public.user_credits;
 DROP POLICY IF EXISTS "Admin full access" ON public.user_credits;
+DROP POLICY IF EXISTS "user_credits_select_own" ON public.user_credits;
+DROP POLICY IF EXISTS "user_credits_update_own" ON public.user_credits;
+DROP POLICY IF EXISTS "user_credits_insert_own" ON public.user_credits;
 
 -- Simple policy: Users can manage their own data
 CREATE POLICY "user_credits_select_own" ON public.user_credits
@@ -36,13 +39,16 @@ CREATE POLICY "user_credits_insert_own" ON public.user_credits
 -- ==========================
 ALTER TABLE public.creations ENABLE ROW LEVEL SECURITY;
 
--- Drop ALL existing policies
+-- Drop ALL existing policies (including new ones if rerunning)
 DROP POLICY IF EXISTS "Users can view own creations" ON public.creations;
 DROP POLICY IF EXISTS "Users can insert own creations" ON public.creations;
 DROP POLICY IF EXISTS "Users can delete own creations" ON public.creations;
 DROP POLICY IF EXISTS "Users can update own creations" ON public.creations;
 DROP POLICY IF EXISTS "Admin can view all creations" ON public.creations;
 DROP POLICY IF EXISTS "Public can view creations" ON public.creations;
+DROP POLICY IF EXISTS "creations_select_own" ON public.creations;
+DROP POLICY IF EXISTS "creations_insert_own" ON public.creations;
+DROP POLICY IF EXISTS "creations_delete_own" ON public.creations;
 
 -- Simple policies for regular users
 CREATE POLICY "creations_select_own" ON public.creations
@@ -62,9 +68,11 @@ CREATE POLICY "creations_delete_own" ON public.creations
 -- ==========================
 ALTER TABLE public.discovered_personas ENABLE ROW LEVEL SECURITY;
 
--- Drop existing
+-- Drop existing (including new ones if rerunning)
 DROP POLICY IF EXISTS "Public can view all" ON public.discovered_personas;
 DROP POLICY IF EXISTS "Allow all for authenticated" ON public.discovered_personas;
+DROP POLICY IF EXISTS "personas_read_all" ON public.discovered_personas;
+DROP POLICY IF EXISTS "personas_manage_authenticated" ON public.discovered_personas;
 
 -- Anyone can read personas
 CREATE POLICY "personas_read_all" ON public.discovered_personas
