@@ -23,55 +23,46 @@ export const generatePersonaImage = async (
   prompt: string,
   cachedFaceDescription?: string | null
 ): Promise<GenerationResult> => {
-  try {
-    // Generate a unique request ID to help with deduplication
-    const requestId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    
-    const { data, error } = await supabase.functions.invoke('generate-poster', {
-      body: { 
-        base64Image, 
-        prompt,
-        cachedFaceDescription: cachedFaceDescription || undefined,
-        requestId
-      },
-    });
+  const { data: { session } } = await supabase.auth.getSession();
 
-    if (error) {
-      // CRITICAL: Try to parse the response body from the error context if available
-      let serverError = "Unknown Edge Function Error";
-      let isDuplicate = false;
-      
-      if (error && typeof error === 'object' && 'context' in error) {
-         try {
-            // @ts-ignore
-            const errorContext = await error.context.json();
-            if (errorContext.error) serverError = errorContext.error;
-            if (errorContext.isDuplicate) isDuplicate = true;
-         } catch (e) {
-            // ignore
-         }
-      }
-
-      // Handle duplicate request gracefully
-      if (isDuplicate) {
-        throw new Error("Request already in progress. Please wait...");
-      }
-
-      throw new Error(`Edge Function Failed: ${serverError}`);
-    }
-
-    if (!data || !data.image) {
-      throw new Error(data?.error || "No image returned from generation service");
-    }
-
-    return {
-      image: data.image,
-      faceDescription: data.faceDescription || '',
-      cached: data.cached || false
-    };
-
-  } catch (error: any) {
-    console.error("Generation Service Error:", error);
-    throw new Error(error.message || "Failed to generate poster");
+  if (!session) {
+    throw new Error("User must be logged in");
   }
+
+  const { data, error } = await supabase.functions.invoke('generate-poster', {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: {
+      base64Image,
+      prompt,
+      cachedFaceDescription: cachedFaceDescription || undefined,
+    },
+  });
+
+  if (error) {
+    console.error("Generation Error:", error);
+    let message = error.message || "Failed to generate image";
+
+    // Attempt to extract the actual error message from the response body
+    if (error instanceof Error && 'context' in error) {
+      try {
+        // @ts-ignore - context exists on FunctionsHttpError
+        const body = await error.context.json();
+        if (body && body.error) {
+          message = body.error;
+        }
+      } catch (e) {
+        console.warn("Failed to parse error body:", e);
+      }
+    }
+
+    throw new Error(message);
+  }
+
+  return {
+    image: data.image,
+    faceDescription: data.faceDescription || '',
+    cached: data.cached || false
+  };
 };

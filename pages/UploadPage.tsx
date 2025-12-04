@@ -116,6 +116,14 @@ const UploadPage: React.FC = () => {
         if (!uploadedImage || !selectedPersona) return;
 
         if (!user) {
+            // CRITICAL FIX: Preserve guest state before auth
+            // Save to sessionStorage so it can be restored after sign-in
+            sessionStorage.setItem('posterme_pending_generation', JSON.stringify({
+                uploadedImage,
+                personaId: selectedPersona.id,
+                timestamp: Date.now()
+            }));
+
             setShowAuthModal(true);
             return;
         }
@@ -290,13 +298,13 @@ const UploadPage: React.FC = () => {
     );
 };
 
-const PersonaCard: React.FC<{
-    persona: Persona,
-    isSelected: boolean,
-    onClick: () => void
-}> = ({ persona, isSelected, onClick }) => {
+const PersonaCard: React.FC<{ persona: Persona; isSelected: boolean; onClick: () => void }> = ({ persona, isSelected, onClick }) => {
+    // Use gradient fallback as default to avoid 404 on deleted static covers
+    // Database covers will load via onLoad, static covers are gone
+    const [imgSrc, setImgSrc] = useState<string>(
+        persona.cover || getFallbackCoverUrl(persona.id)
+    );
     const [isLoaded, setIsLoaded] = useState(false);
-    const [imgSrc, setImgSrc] = useState(persona.cover);
 
     useEffect(() => {
         setImgSrc(persona.cover);

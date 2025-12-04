@@ -125,9 +125,10 @@ const ResultPage: React.FC = () => {
             return;
         }
 
-        // Set deduplication lock
+        // INSTANT LOADING FEEDBACK: Set loading state IMMEDIATELY
+        // This provides instant visual feedback instead of 2-3 second delay
         isGeneratingRef.current = true;
-        setLoading(true); // INSTANT FEEDBACK: Start loading immediately
+        setLoading(true);
         setError(null);
         setIsSaved(false);
         setFeedback(null); // Reset feedback on new generation
@@ -138,7 +139,7 @@ const ResultPage: React.FC = () => {
         // If not logged in, they technically have 0 credits so this will block them, which is correct.
         if (!hasCredits) {
             setCreditsExhausted(true);
-            setLoading(false); // Ensure loading stops
+            setLoading(false); // Stop loading
             isGeneratingRef.current = false; // Release lock
 
             // Show user-friendly message for retry attempts
@@ -160,35 +161,29 @@ const ResultPage: React.FC = () => {
                 }
             }
 
+            // CRITICAL FIX: Deduct credit BEFORE generation starts
+            // This provides instant UI feedback to the user
+            try {
+                await deductCredit();
+            } catch (creditError) {
+                console.error("Credit deduction failed:", creditError);
+                setCreditsExhausted(true);
+                setLoading(false);
+                isGeneratingRef.current = false;
+                toast.error("Failed to deduct credit. Please try again.");
+                return;
+            }
+
             // COST OPTIMIZATION: Pass cached face description if available
-            console.log(cachedFaceDescription
-                ? "Using cached face description (saving 1 API call!)"
-                : "No cached face description, will generate new one"
-            );
-
-            // Deduct credit *before* starting generation (optimistic)
-            // Or if we want to be strict: Reserve credit?
-            // Current requirement: "every generation = 1 credit STRICTLY"
-            // If we fail, we could refund, but standard practice for AI gen is usually deduction on initiation or success.
-            // User asked "try again should count as credit and users should not be allowed to try again if they don't have credits"
-
-            // We will deduct AFTER success to be fair, but we MUST ensure they can't start if 0.
-            // We already checked 'hasCredits' above.
-
             const result = await generatePersonaImage(
                 uploadedImage,
                 selectedPersona.prompt,
                 cachedFaceDescription // Pass cached description if available
             );
 
-            // Success! Credit was deducted server-side.
-            // Refresh local credits to sync UI
-            await checkCredits();
-
             // Cache the face description for future generations with the same photo
             if (result.faceDescription && !cachedFaceDescription) {
                 setCachedFaceDescription(result.faceDescription);
-                console.log("Cached new face description for future use");
             }
 
             setGeneratedImage(result.image);
@@ -206,8 +201,18 @@ const ResultPage: React.FC = () => {
             } else if (errorMessage.includes("Insufficient credits")) {
                 setCreditsExhausted(true);
                 setError(null);
+            } else if (errorMessage.includes("503") || errorMessage.includes("overloaded") || errorMessage.includes("UNAVAILABLE")) {
+                // User-friendly message for overloaded API
+                setError("The AI model is currently experiencing high demand. We've already tried multiple times. Please wait a moment and try again.");
+                toast.error("Model temporarily overloaded. Please try again in a moment.");
+            } else if (errorMessage.includes("429") || errorMessage.includes("rate limit")) {
+                setError("Too many requests. Please wait a moment before trying again.");
+                toast.error("Rate limit reached. Please wait a moment.");
             } else {
                 setError(errorMessage);
+                // If generation failed after credit deduction, user already paid
+                // Standard practice: don't refund for failed AI generations
+                toast.error("Generation failed. Please try again.");
             }
             setLoading(false);
         } finally {
@@ -216,6 +221,7 @@ const ResultPage: React.FC = () => {
         }
     }, [uploadedImage, selectedPersona, checkCredits, deductCredit, cachedFaceDescription, setCachedFaceDescription, generatedImage]);
 
+    // Auto-generate on mount (must be AFTER generateImage is defined)
     useEffect(() => {
         if (hasAttemptedRef.current || !uploadedImage || !selectedPersona) return;
 
@@ -225,13 +231,8 @@ const ResultPage: React.FC = () => {
         }
 
         hasAttemptedRef.current = true;
-        generateImage();
-    }, [generateImage, uploadedImage, selectedPersona, generatedImage]);
-
-    const handleCreditsExhaustedClose = () => {
-        // Maybe redirect to library or home?
-        navigate('/');
-    };
+        generateImage(false);
+    }, [uploadedImage, selectedPersona, generateImage, generatedImage]);
 
     const handleKeySelection = async () => {
         const aistudio = (window as any).aistudio;
@@ -278,30 +279,61 @@ const ResultPage: React.FC = () => {
             <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden relative">
 
                 {/* Credits Exhausted Modal */}
-                {creditsExhausted && !loading && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl relative text-center">
-                            <div className="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {creditsExhausted && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-md w-full shadow-2xl relative">
+                            <button
+                                onClick={() => {
+                                    setCreditsExhausted(false);
+                                    navigate('/');
+                                }}
+                                className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            </button>
+
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                </div>
+                                <h2 className="text-2xl font-bold text-white mb-2">Credits Exhausted</h2>
+                                <p className="text-zinc-400 mb-4">You've used all your credits. Buy more to continue creating awesome posters!</p>
+
+                                <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 mb-4">
+                                    <p className="text-sm text-zinc-400 mb-2">1 Credit = 1 Generation</p>
+                                    <div className="flex items-center justify-center gap-3">
+                                        <div className="text-left">
+                                            <p className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">50% OFF</p>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-3xl font-bold text-white">₹49</span>
+                                                <span className="text-lg text-zinc-500 line-through">₹99</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-2xl text-zinc-600">=</div>
+                                        <div className="text-left">
+                                            <p className="text-xs text-zinc-500 font-medium">Get</p>
+                                            <p className="text-3xl font-bold text-blue-400">5 Credits</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Credits Exhausted</h2>
-                            <p className="text-zinc-400 mb-6">You've used your free generation credit. We hope you enjoyed your poster!</p>
 
                             <button
-                                onClick={() => buyCredits()}
-                                className="w-full bg-green-600 text-white font-bold py-3 rounded-full hover:bg-green-500 transition-colors mb-3 flex items-center justify-center gap-2"
+                                disabled
+                                className="w-full bg-zinc-800 text-zinc-500 font-bold py-3.5 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 mb-3"
                             >
-                                <span>Get 5 Credits for ₹49</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                Coming Soon
                             </button>
 
                             <button
-                                onClick={handleCreditsExhaustedClose}
-                                className="w-full bg-zinc-800 text-zinc-300 font-bold py-3 rounded-full hover:bg-zinc-700 transition-colors"
+                                onClick={() => {
+                                    setCreditsExhausted(false);
+                                    navigate('/');
+                                }}
+                                className="w-full bg-zinc-800/50 text-zinc-300 font-medium py-2.5 rounded-lg hover:bg-zinc-800 transition-colors"
                             >
-                                Back to Home
+                                Go Back
                             </button>
                         </div>
                     </div>

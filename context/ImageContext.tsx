@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ImageContextType, Persona, SavedCreation } from '../types.ts';
 import { PERSONAS } from '../constants.ts';
 import { useAuth } from './AuthContext.tsx';
@@ -12,6 +13,7 @@ const ImageContext = createContext<ImageContextType | undefined>(undefined);
 
 export const ImageContextProvider = ({ children }: { children: any }) => {
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     // Initialize state (don't load from localStorage - images are too large)
     // @ts-ignore
@@ -114,20 +116,17 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
 
     const deductCredit = async () => {
         if (!user) {
-            console.error("Cannot deduct credit: User not logged in");
             throw new Error("User not authenticated");
         }
 
         try {
             // Check if unlimited locally before modifying UI
             if (isUnlimited) {
-                console.log("User has unlimited credits, skipping deduction");
                 return;
             }
 
             // Extra validation: ensure user has credits locally before attempting deduction
             if (credits <= 0) {
-                console.error("Cannot deduct credit: Local credit count is 0");
                 await fetchCredits(); // Re-sync to be sure
                 throw new Error("Insufficient credits");
             }
@@ -135,7 +134,6 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
             // Optimistic UI update
             setCredits((prev: number) => {
                 const newVal = Math.max(0, prev - 1);
-                console.log(`Credit deducted optimistically: ${prev} -> ${newVal}`);
                 return newVal;
             });
 
@@ -146,12 +144,9 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
 
             // data is boolean success
             if (data === false) {
-                console.error("Server rejected credit deduction");
                 fetchCredits(); // Re-sync with server true value
                 throw new Error("Insufficient credits");
             }
-
-            console.log("Credit deducted successfully on server");
         } catch (e) {
             console.error("Failed to deduct credit", e);
             fetchCredits(); // Re-sync on error
@@ -239,13 +234,8 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
             const query = new URLSearchParams(window.location.search);
             const orderId = query.get('order_id');
 
-            console.log("Checking Payment - URL Params:", window.location.search);
-            console.log("Checking Payment - Order ID:", orderId);
-            console.log("Checking Payment - User:", user ? user.id : "Not logged in");
-
             if (orderId) {
                 if (!user) {
-                    console.log("Order ID found, waiting for user auth...");
                     return; // Wait for user to be loaded
                 }
 
@@ -253,7 +243,6 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
                 window.history.replaceState({}, document.title, window.location.pathname);
 
                 const toastId = toast.loading("Verifying payment...");
-                console.log("Verifying Order ID with Backend:", orderId);
 
                 try {
                     const { data, error } = await supabase.functions.invoke('payment-handler', {
@@ -264,11 +253,8 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
                     });
 
                     if (error) {
-                        console.error("Edge Function Error:", error);
                         throw error;
                     }
-
-                    console.log("Payment Verification Response:", data);
 
                     if (data.success) {
                         // Success! Show Modal
@@ -276,11 +262,9 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
                         setShowSuccessModal(true);
                         await fetchCredits();
                     } else {
-                        console.error("Payment failed reason:", data.message, data.status);
                         toast.error(data.message || "Payment not completed.", { id: toastId });
                     }
                 } catch (e: any) {
-                    console.error("Payment verification error", e);
                     toast.error("Failed to verify payment.", { id: toastId });
                 }
             }
@@ -456,6 +440,31 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
         }
         // Always load discovered personas
         loadDiscoveredPersonas();
+    }, [user]);
+
+    // CRITICAL FIX: Listen for guest state restoration after sign-in
+    useEffect(() => {
+        const handleRestore = (event: any) => {
+            const { uploadedImage, personaId } = event.detail;
+
+            // Restore state
+            setUploadedImage(uploadedImage);
+
+            // Find and set persona
+            const persona = PERSONAS.find(p => p.id === personaId);
+            if (persona) {
+                setSelectedPersona(persona);
+                setGeneratedImage(null);
+
+                // Navigate to result page
+                setTimeout(() => {
+                    navigate('/result');
+                }, 100);
+            }
+        };
+
+        window.addEventListener('restore-generation-state', handleRestore);
+        return () => window.removeEventListener('restore-generation-state', handleRestore);
     }, [user]);
 
     const saveToLibrary = async (imageUrl: string, personaId: string) => {

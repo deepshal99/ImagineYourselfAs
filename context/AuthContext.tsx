@@ -30,10 +30,38 @@ export const AuthProvider = ({ children }) => {
     });
 
     // Listen for changes on auth state (logged in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // CRITICAL FIX: Restore guest state after sign-in
+      if (session?.user && _event === 'SIGNED_IN') {
+        const pendingData = sessionStorage.getItem('posterme_pending_generation');
+        if (pendingData) {
+          try {
+            const { uploadedImage, personaId, timestamp } = JSON.parse(pendingData);
+
+            // Check if data is recent (within 10 minutes)
+            const isRecent = (Date.now() - timestamp) < 10 * 60 * 1000;
+
+            if (isRecent && uploadedImage && personaId) {
+              // Clear session storage first
+              sessionStorage.removeItem('posterme_pending_generation');
+
+              // Dispatch custom event to ImageContext to restore state
+              window.dispatchEvent(new CustomEvent('restore-generation-state', {
+                detail: { uploadedImage, personaId }
+              }));
+            } else {
+              sessionStorage.removeItem('posterme_pending_generation');
+            }
+          } catch (e) {
+            console.error("Failed to restore generation state:", e);
+            sessionStorage.removeItem('posterme_pending_generation');
+          }
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -45,22 +73,22 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.origin,
-            skipBrowserRedirect: true // We will handle the redirect manually to ensure it works
+          redirectTo: window.location.origin,
+          skipBrowserRedirect: true // We will handle the redirect manually to ensure it works
         }
       });
-      
+
       console.log("Supabase Auth Response:", { data, error });
 
       if (error) throw error;
-      
+
       // If we get here, Supabase should have triggered a redirect.
       // If data.url exists, we can manually redirect if the SDK didn't.
       if (data?.url) {
-          console.log("Manual redirecting to:", data.url);
-          window.location.href = data.url;
+        console.log("Manual redirecting to:", data.url);
+        window.location.href = data.url;
       }
-      
+
     } catch (error) {
       console.error("Error signing in with Google:", error);
       alert("Failed to sign in with Google. Please check console for details.");
