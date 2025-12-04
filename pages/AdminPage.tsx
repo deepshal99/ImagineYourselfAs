@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { PERSONAS, buildPrompt, getFallbackCoverUrl } from '../constants';
+import { PERSONAS, buildPrompt } from '../constants';
 import { Persona, PersonaCategory } from '../types';
 import { toast } from 'sonner';
 
@@ -119,7 +119,7 @@ const UserRow: React.FC<{
 
   return (
     <div className="border-b border-zinc-800/50 last:border-0">
-      <div 
+      <div
         className="flex items-center justify-between p-4 hover:bg-zinc-800/30 cursor-pointer transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
@@ -145,11 +145,11 @@ const UserRow: React.FC<{
               </p>
             )}
           </div>
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
             className={`w-5 h-5 text-zinc-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-            fill="none" 
-            viewBox="0 0 24 24" 
+            fill="none"
+            viewBox="0 0 24 24"
             stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -179,23 +179,22 @@ const UserRow: React.FC<{
                 Add Credits
               </button>
             </div>
-            
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleUnlimited(user.id, user.is_unlimited);
               }}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                user.is_unlimited 
-                  ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30' 
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${user.is_unlimited
+                  ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
                   : 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30'
-              }`}
+                }`}
             >
               {user.is_unlimited ? 'Revoke Unlimited' : 'Grant Unlimited'}
             </button>
 
             <div className="flex-1" />
-            
+
             <span className="text-zinc-500 text-xs">
               User ID: {user.id.substring(0, 8)}...
             </span>
@@ -208,7 +207,7 @@ const UserRow: React.FC<{
 
 const PersonaBarChart: React.FC<{ data: PersonaStats[] }> = ({ data }) => {
   const maxCount = Math.max(...data.map(d => d.count), 1);
-  
+
   return (
     <div className="space-y-3">
       {data.slice(0, 10).map((persona, index) => (
@@ -220,7 +219,7 @@ const PersonaBarChart: React.FC<{ data: PersonaStats[] }> = ({ data }) => {
               <span className="text-zinc-400 text-sm">{persona.count}</span>
             </div>
             <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
                 style={{ width: `${(persona.count / maxCount) * 100}%` }}
               />
@@ -292,39 +291,7 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
     }
   };
 
-  const generateCoverWithAI = async () => {
-    if (!prompt) {
-      toast.error('Please add a prompt first');
-      return;
-    }
 
-    setIsGeneratingCover(true);
-    try {
-      // Use the generate-asset edge function
-      const { data, error } = await supabase.functions.invoke('generate-asset', {
-        body: { 
-          prompt: `Movie poster cover art for ${name}. ${styleDescription || 'Cinematic, dramatic lighting, high quality'}`
-        }
-      });
-
-      if (error) throw error;
-      if (data?.image) {
-        // Convert to data URL if it's just base64
-        const imageUrl = data.image.startsWith('data:') 
-          ? data.image 
-          : `data:image/png;base64,${data.image}`;
-        setCover(imageUrl);
-        toast.success('Cover generated!');
-      }
-    } catch (error) {
-      console.error('Error generating cover:', error);
-      toast.error('Failed to generate cover. Using fallback.');
-      // Use Pollinations fallback
-      setCover(getFallbackCoverUrl(prompt));
-    } finally {
-      setIsGeneratingCover(false);
-    }
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -335,7 +302,7 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
       // 1. Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `covers/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('creations') // Reusing creations bucket, ideally use a dedicated 'assets' bucket
         .upload(fileName, file);
@@ -368,7 +335,7 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
       id: persona?.id || `custom_${Date.now()}`,
       name,
       category,
-      cover: cover || getFallbackCoverUrl(prompt),
+      cover: cover,
       prompt,
       order: persona?.order || 999,
       isVisible: true,
@@ -380,7 +347,7 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div 
+      <div
         className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -389,7 +356,7 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
           <h2 className="text-xl font-bold text-white">
             {isNew ? '✨ Add New Persona' : '✏️ Edit Persona'}
           </h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
           >
@@ -442,25 +409,7 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
                     </>
                   )}
                 </button>
-                <button
-                  onClick={generateCoverWithAI}
-                  disabled={isGeneratingCover || !prompt}
-                  className="w-full px-3 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  {isGeneratingCover ? (
-                    <>
-                      <div className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                      </svg>
-                      Generate AI Cover
-                    </>
-                  )}
-                </button>
+
               </div>
             </div>
 
@@ -637,12 +586,13 @@ const DraggablePersonaCard: React.FC<DraggablePersonaCardProps> = ({
 
       {/* Cover */}
       <div className="w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-zinc-800">
-        <img 
-          src={persona.cover} 
+        <img
+          src={persona.cover}
           alt={persona.name}
           className="w-full h-full object-cover"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = getFallbackCoverUrl(persona.prompt);
+            // (e.target as HTMLImageElement).src = '/placeholder.png'; // Optional: set to a placeholder
+            console.warn("Failed to load cover", persona.name);
           }}
         />
       </div>
@@ -723,11 +673,11 @@ type TabType = 'overview' | 'users' | 'generations' | 'analytics' | 'manage-pers
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  
+
   // Data states
   const [stats, setStats] = useState<StatsData | null>(null);
   const [users, setUsers] = useState<UserData[]>([]);
@@ -744,7 +694,7 @@ const AdminPage: React.FC = () => {
   const [isMagicAddOpen, setIsMagicAddOpen] = useState(false);
   const [magicName, setMagicName] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  
+
   // Drag and drop states
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -761,10 +711,10 @@ const AdminPage: React.FC = () => {
         navigate('/');
         return;
       }
-      
+
       const email = user.email?.toLowerCase() || '';
       console.log("AdminPage: Checking admin for", email, "Allowed:", ADMIN_EMAILS);
-      
+
       if (ADMIN_EMAILS.includes(email)) {
         setIsAdmin(true);
       } else {
@@ -778,7 +728,7 @@ const AdminPage: React.FC = () => {
   // Fetch all data
   const fetchData = useCallback(async () => {
     if (!isAdmin) return;
-    
+
     setLoading(true);
     try {
       // Fetch users with their credit info
@@ -807,7 +757,7 @@ const AdminPage: React.FC = () => {
 
       // Process users data
       const userMap = new Map<string, UserData>();
-      
+
       (creditsData || []).forEach((credit: any) => {
         userMap.set(credit.user_id, {
           id: credit.user_id,
@@ -840,7 +790,7 @@ const AdminPage: React.FC = () => {
         }
       });
 
-      const usersArray = Array.from(userMap.values()).sort((a, b) => 
+      const usersArray = Array.from(userMap.values()).sort((a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       setUsers(usersArray);
@@ -891,7 +841,7 @@ const AdminPage: React.FC = () => {
       });
 
       const managed: ManagedPersona[] = [];
-      
+
       // Add built-in personas (with DB overrides if they exist)
       PERSONAS.forEach((p, i) => {
         const dbOverride = dbPersonaMap.get(p.id);
@@ -916,7 +866,7 @@ const AdminPage: React.FC = () => {
           });
         }
       });
-      
+
       // Add remaining custom personas (ones not overriding built-ins)
       dbPersonaMap.forEach((p, _id) => {
         managed.push({
@@ -929,10 +879,10 @@ const AdminPage: React.FC = () => {
           isVisible: p.is_visible !== false,
         });
       });
-      
+
       // Sort by order
       managed.sort((a, b) => a.order - b.order);
-      
+
       setManagedPersonas(managed);
 
       // Calculate stats
@@ -944,7 +894,7 @@ const AdminPage: React.FC = () => {
       const generationsToday = (creationsData || []).filter(
         (c: any) => new Date(c.created_at) >= todayStart
       ).length;
-      
+
       const generationsThisWeek = (creationsData || []).filter(
         (c: any) => new Date(c.created_at) >= weekStart
       ).length;
@@ -992,9 +942,9 @@ const AdminPage: React.FC = () => {
           .select('credits')
           .eq('user_id', userId)
           .single();
-        
+
         const currentCredits = currentData?.credits || 0;
-        
+
         if (currentData) {
           await supabase
             .from('user_credits')
@@ -1034,7 +984,7 @@ const AdminPage: React.FC = () => {
   const handleSavePersona = async (personaData: Partial<ManagedPersona> & { id?: string }) => {
     try {
       const personaId = personaData.id || `custom_${Date.now()}`;
-      
+
       // Always upsert to database (handles both new and edited personas, including built-ins)
       const { error } = await supabase
         .from('discovered_personas')
@@ -1051,7 +1001,7 @@ const AdminPage: React.FC = () => {
         });
 
       if (error) throw error;
-      
+
       const existingPersona = managedPersonas.find(p => p.id === personaId);
       toast.success(existingPersona ? 'Persona updated successfully!' : 'Persona created successfully!');
 
@@ -1065,11 +1015,11 @@ const AdminPage: React.FC = () => {
   const handleDeletePersona = async (personaId: string) => {
     const persona = managedPersonas.find(p => p.id === personaId);
     const isBuiltIn = PERSONAS.some(p => p.id === personaId);
-    
-    const message = isBuiltIn 
-      ? 'This is a default persona. Deleting will hide it permanently. Continue?' 
+
+    const message = isBuiltIn
+      ? 'This is a default persona. Deleting will hide it permanently. Continue?'
       : 'Are you sure you want to delete this persona? This cannot be undone.';
-    
+
     if (!confirm(message)) {
       return;
     }
@@ -1105,7 +1055,7 @@ const AdminPage: React.FC = () => {
         if (error) throw error;
         toast.success('Persona deleted');
       }
-      
+
       fetchData();
     } catch (error) {
       console.error('Error deleting persona:', error);
@@ -1173,22 +1123,22 @@ const AdminPage: React.FC = () => {
 
   const handleDragEnd = () => {
     if (sortMethod !== 'manual') {
-        toast.error('Switch to "Manual" sort to reorder');
-        setDragIndex(null);
-        setDragOverIndex(null);
-        return;
+      toast.error('Switch to "Manual" sort to reorder');
+      setDragIndex(null);
+      setDragOverIndex(null);
+      return;
     }
 
     if (dragIndex !== null && dragOverIndex !== null && dragIndex !== dragOverIndex) {
       const newPersonas = [...managedPersonas];
       const [removed] = newPersonas.splice(dragIndex, 1);
       newPersonas.splice(dragOverIndex, 0, removed);
-      
+
       // Update order numbers in local state
       newPersonas.forEach((p, i) => {
         p.order = i;
       });
-      
+
       setManagedPersonas(newPersonas);
       setIsOrderDirty(true);
     }
@@ -1201,7 +1151,7 @@ const AdminPage: React.FC = () => {
     if (method === 'manual') return;
 
     const sorted = [...managedPersonas];
-    
+
     if (method === 'alpha') {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
     } else if (method === 'popular') {
@@ -1245,7 +1195,7 @@ const AdminPage: React.FC = () => {
         .upsert(updates, { onConflict: 'id' });
 
       if (error) throw error;
-      
+
       toast.success('Order saved successfully');
       setIsOrderDirty(false);
       // Reset to manual sort as we've now saved a custom order
@@ -1262,7 +1212,7 @@ const AdminPage: React.FC = () => {
     setIsAnalyzing(true);
     try {
       console.log("Invoking analyze-persona with name:", magicName);
-      
+
       const { data, error } = await supabase.functions.invoke('analyze-persona', {
         body: { name: magicName }
       });
@@ -1271,7 +1221,7 @@ const AdminPage: React.FC = () => {
         // Try to parse the error body if available
         let details = '';
         if (error instanceof Error) {
-            details = error.message;
+          details = error.message;
         }
         // If it's a FunctionsHttpError, it might have context
         console.error("Full Error Object:", error);
@@ -1281,7 +1231,7 @@ const AdminPage: React.FC = () => {
       console.log("Analysis Result:", data);
 
       if (!data || !data.name || !data.prompt) {
-          throw new Error("Invalid response from AI");
+        throw new Error("Invalid response from AI");
       }
 
       // Close magic modal
@@ -1301,7 +1251,7 @@ const AdminPage: React.FC = () => {
       } as ManagedPersona);
       setIsNewPersona(true);
       setIsEditorOpen(true);
-      
+
       toast.success('Persona profile generated! Review and save.');
     } catch (error: any) {
       console.error('Error analyzing persona:', error);
@@ -1312,7 +1262,7 @@ const AdminPage: React.FC = () => {
   };
 
   // Filter users by search
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = users.filter(u =>
     u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -1344,7 +1294,7 @@ const AdminPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => navigate('/')}
                 className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
               >
@@ -1357,8 +1307,8 @@ const AdminPage: React.FC = () => {
                 <p className="text-zinc-500 text-xs">PosterMe Management Console</p>
               </div>
             </div>
-            
-            <button 
+
+            <button
               onClick={fetchData}
               className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
@@ -1385,11 +1335,10 @@ const AdminPage: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
-                className={`px-4 sm:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
+                className={`px-4 sm:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
                     ? 'border-blue-500 text-white'
                     : 'border-transparent text-zinc-500 hover:text-zinc-300'
-                }`}
+                  }`}
               >
                 <span className="mr-2">{tab.icon}</span>
                 {tab.label}
@@ -1401,7 +1350,7 @@ const AdminPage: React.FC = () => {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+
         {/* Overview Tab */}
         {activeTab === 'overview' && stats && (
           <div className="space-y-8">
@@ -1464,19 +1413,19 @@ const AdminPage: React.FC = () => {
             <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-white mb-4">⚡ Quick Actions</h3>
               <div className="flex flex-wrap gap-3">
-                <button 
+                <button
                   onClick={() => setActiveTab('users')}
                   className="px-4 py-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-lg text-sm font-medium transition-colors"
                 >
                   Manage Users
                 </button>
-                <button 
+                <button
                   onClick={() => setActiveTab('manage-personas')}
                   className="px-4 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 rounded-lg text-sm font-medium transition-colors"
                 >
                   Manage Personas
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     const csv = [
                       ['Email', 'Credits', 'Unlimited', 'Generations', 'Joined'].join(','),
@@ -1547,13 +1496,13 @@ const AdminPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {generations.slice(0, 50).map((gen) => (
-                <div 
+                <div
                   key={gen.id}
                   className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl overflow-hidden group"
                 >
                   <div className="aspect-[2/3] relative">
-                    <img 
-                      src={gen.image_url} 
+                    <img
+                      src={gen.image_url}
                       alt={gen.persona_name}
                       className="absolute inset-0 w-full h-full object-cover"
                       loading="lazy"
@@ -1595,15 +1544,15 @@ const AdminPage: React.FC = () => {
                   {personaStats.map((stat, index) => {
                     const persona = managedPersonas.find(p => p.id === stat.id);
                     return (
-                      <div 
+                      <div
                         key={stat.id}
                         className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-zinc-500 text-sm w-6">#{index + 1}</span>
                           {persona && (
-                            <img 
-                              src={persona.cover} 
+                            <img
+                              src={persona.cover}
                               alt={persona.name}
                               className="w-8 h-12 object-cover rounded"
                             />
@@ -1631,8 +1580,8 @@ const AdminPage: React.FC = () => {
                   .filter(p => !personaStats.find(s => s.id === p.id))
                   .map(persona => (
                     <div key={persona.id} className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 rounded-lg">
-                      <img 
-                        src={persona.cover} 
+                      <img
+                        src={persona.cover}
                         alt={persona.name}
                         className="w-6 h-8 object-cover rounded"
                       />
@@ -1705,11 +1654,10 @@ const AdminPage: React.FC = () => {
                   <button
                     key={method.id}
                     onClick={() => handleSortChange(method.id as any)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                      sortMethod === method.id
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${sortMethod === method.id
                         ? 'bg-zinc-700 text-white shadow-sm'
                         : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                    }`}
+                      }`}
                   >
                     {method.label}
                   </button>
@@ -1737,11 +1685,10 @@ const AdminPage: React.FC = () => {
                 <button
                   key={cat}
                   onClick={() => setPersonaSearchQuery(cat === 'All' ? '' : cat)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    (cat === 'All' && !personaSearchQuery) || personaSearchQuery.toLowerCase() === cat.toLowerCase()
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${(cat === 'All' && !personaSearchQuery) || personaSearchQuery.toLowerCase() === cat.toLowerCase()
                       ? 'bg-blue-600 text-white'
                       : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                  }`}
+                    }`}
                 >
                   {cat}
                 </button>
@@ -1808,11 +1755,11 @@ const AdminPage: React.FC = () => {
       {isMagicAddOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-            <button 
+            <button
               onClick={() => setIsMagicAddOpen(false)}
               className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
             </button>
 
             <div className="text-center mb-6">
@@ -1835,7 +1782,7 @@ const AdminPage: React.FC = () => {
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleMagicAdd()}
               />
-              
+
               <button
                 onClick={handleMagicAdd}
                 disabled={!magicName || isAnalyzing}

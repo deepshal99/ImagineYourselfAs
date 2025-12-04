@@ -125,6 +125,13 @@ const ResultPage: React.FC = () => {
             return;
         }
 
+        // Set deduplication lock
+        isGeneratingRef.current = true;
+        setLoading(true); // INSTANT FEEDBACK: Start loading immediately
+        setError(null);
+        setIsSaved(false);
+        setFeedback(null); // Reset feedback on new generation
+
         // STRICT ENFORCEMENT: Check credits before EVERY generation (including retry)
         const hasCredits = await checkCredits();
 
@@ -140,13 +147,6 @@ const ResultPage: React.FC = () => {
             }
             return;
         }
-
-        // Set deduplication lock
-        isGeneratingRef.current = true;
-        setLoading(true);
-        setError(null);
-        setIsSaved(false);
-        setFeedback(null); // Reset feedback on new generation
 
         try {
             const aistudio = (window as any).aistudio;
