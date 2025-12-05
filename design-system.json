@@ -1,0 +1,590 @@
+{
+    "$schema": "design-system-v1",
+    "name": "AI Agent Design System",
+    "version": "1.0.0",
+    "description": "A playful, modern, and friendly design system with soft aesthetics, rounded corners, and a welcoming tone",
+    "designPhilosophy": {
+        "vibe": "Friendly, playful, modern, approachable",
+        "tone": "Warm, welcoming, conversational, delightful",
+        "aesthetic": "Soft, clean, minimalist with playful accents",
+        "principles": [
+            "Clarity over complexity",
+            "Delight through subtle animations",
+            "Consistent rounded corners for friendliness",
+            "Generous whitespace for breathing room",
+            "Playful mascots and illustrations add personality"
+        ]
+    },
+    "colors": {
+        "brand": {
+            "primary": "#00A3FF",
+            "primaryLight": "#4DC3FF",
+            "primaryDark": "#0082CC",
+            "secondary": "#FF6B9D",
+            "accent": "#FFD93D"
+        },
+        "background": {
+            "primary": "#FFFFFF",
+            "secondary": "#F8F9FA",
+            "tertiary": "#F0F2F5",
+            "elevated": "#FFFFFF",
+            "overlay": "rgba(0, 0, 0, 0.4)"
+        },
+        "surface": {
+            "card": "#FFFFFF",
+            "cardHover": "#FAFBFC",
+            "input": "#FFFFFF",
+            "inputFocused": "#FFFFFF",
+            "chip": "#FFFFFF",
+            "chipActive": "#1A1A1A"
+        },
+        "text": {
+            "primary": "#1A1A1A",
+            "secondary": "#6B7280",
+            "tertiary": "#9CA3AF",
+            "inverse": "#FFFFFF",
+            "link": "#00A3FF",
+            "accent": "#00A3FF"
+        },
+        "border": {
+            "light": "#E5E7EB",
+            "medium": "#D1D5DB",
+            "dark": "#9CA3AF",
+            "focus": "#00A3FF"
+        },
+        "status": {
+            "success": "#10B981",
+            "successLight": "#D1FAE5",
+            "warning": "#F59E0B",
+            "warningLight": "#FEF3C7",
+            "error": "#EF4444",
+            "errorLight": "#FEE2E2",
+            "info": "#3B82F6",
+            "infoLight": "#DBEAFE"
+        },
+        "gradients": {
+            "primary": "linear-gradient(135deg, #00A3FF 0%, #0082CC 100%)",
+            "warm": "linear-gradient(135deg, #FF6B9D 0%, #FF8A65 100%)",
+            "soft": "linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%)"
+        }
+    },
+    "typography": {
+        "fontFamilies": {
+            "heading": "'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            "headingSerif": "'Georgia', 'Times New Roman', serif",
+            "body": "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            "mono": "'SF Mono', 'Monaco', 'Consolas', monospace"
+        },
+        "fontWeights": {
+            "light": 300,
+            "regular": 400,
+            "medium": 500,
+            "semibold": 600,
+            "bold": 700,
+            "extrabold": 800
+        },
+        "scale": {
+            "xs": {
+                "fontSize": "12px",
+                "lineHeight": "16px",
+                "letterSpacing": "0.02em"
+            },
+            "sm": {
+                "fontSize": "14px",
+                "lineHeight": "20px",
+                "letterSpacing": "0.01em"
+            },
+            "base": {
+                "fontSize": "16px",
+                "lineHeight": "24px",
+                "letterSpacing": "0"
+            },
+            "lg": {
+                "fontSize": "18px",
+                "lineHeight": "28px",
+                "letterSpacing": "-0.01em"
+            },
+            "xl": {
+                "fontSize": "20px",
+                "lineHeight": "28px",
+                "letterSpacing": "-0.01em"
+            },
+            "2xl": {
+                "fontSize": "24px",
+                "lineHeight": "32px",
+                "letterSpacing": "-0.02em"
+            },
+            "3xl": {
+                "fontSize": "30px",
+                "lineHeight": "36px",
+                "letterSpacing": "-0.02em"
+            },
+            "4xl": {
+                "fontSize": "36px",
+                "lineHeight": "40px",
+                "letterSpacing": "-0.02em"
+            }
+        },
+        "styles": {
+            "welcomeLabel": {
+                "fontFamily": "'Georgia', serif",
+                "fontStyle": "italic",
+                "fontSize": "16px",
+                "lineHeight": "24px",
+                "fontWeight": 400,
+                "color": "#1A1A1A"
+            },
+            "userName": {
+                "fontFamily": "'SF Pro Display', sans-serif",
+                "fontSize": "28px",
+                "lineHeight": "34px",
+                "fontWeight": 700,
+                "color": "#1A1A1A",
+                "letterSpacing": "-0.02em"
+            },
+            "sectionTitle": {
+                "fontFamily": "'SF Pro Display', sans-serif",
+                "fontSize": "20px",
+                "lineHeight": "28px",
+                "fontWeight": 600,
+                "color": "#1A1A1A"
+            },
+            "cardTitle": {
+                "fontFamily": "'SF Pro Text', sans-serif",
+                "fontSize": "14px",
+                "lineHeight": "20px",
+                "fontWeight": 600,
+                "color": "#FFFFFF"
+            },
+            "cardSubtitle": {
+                "fontFamily": "'SF Pro Text', sans-serif",
+                "fontSize": "10px",
+                "lineHeight": "14px",
+                "fontWeight": 400,
+                "color": "rgba(255, 255, 255, 0.8)"
+            },
+            "chipText": {
+                "fontFamily": "'SF Pro Text', sans-serif",
+                "fontSize": "14px",
+                "lineHeight": "20px",
+                "fontWeight": 500
+            },
+            "buttonText": {
+                "fontFamily": "'SF Pro Text', sans-serif",
+                "fontSize": "16px",
+                "lineHeight": "24px",
+                "fontWeight": 600
+            },
+            "inputPlaceholder": {
+                "fontFamily": "'SF Pro Text', sans-serif",
+                "fontSize": "16px",
+                "lineHeight": "24px",
+                "fontWeight": 400,
+                "color": "#9CA3AF"
+            },
+            "accentText": {
+                "fontFamily": "'Georgia', serif",
+                "fontStyle": "italic",
+                "fontSize": "18px",
+                "fontWeight": 400,
+                "color": "#00A3FF"
+            }
+        }
+    },
+    "spacing": {
+        "0": "0px",
+        "1": "4px",
+        "2": "8px",
+        "3": "12px",
+        "4": "16px",
+        "5": "20px",
+        "6": "24px",
+        "7": "28px",
+        "8": "32px",
+        "10": "40px",
+        "12": "48px",
+        "16": "64px",
+        "20": "80px",
+        "24": "96px"
+    },
+    "borderRadius": {
+        "none": "0px",
+        "sm": "4px",
+        "md": "8px",
+        "lg": "12px",
+        "xl": "16px",
+        "2xl": "20px",
+        "3xl": "24px",
+        "full": "9999px",
+        "avatar": "16px",
+        "card": "20px",
+        "chip": "9999px",
+        "button": "14px",
+        "input": "16px",
+        "modal": "24px"
+    },
+    "shadows": {
+        "none": "none",
+        "xs": "0 1px 2px rgba(0, 0, 0, 0.05)",
+        "sm": "0 2px 4px rgba(0, 0, 0, 0.06)",
+        "md": "0 4px 8px rgba(0, 0, 0, 0.08)",
+        "lg": "0 8px 16px rgba(0, 0, 0, 0.1)",
+        "xl": "0 12px 24px rgba(0, 0, 0, 0.12)",
+        "2xl": "0 20px 40px rgba(0, 0, 0, 0.15)",
+        "card": "0 4px 12px rgba(0, 0, 0, 0.08)",
+        "cardHover": "0 8px 20px rgba(0, 0, 0, 0.12)",
+        "button": "0 2px 8px rgba(0, 0, 0, 0.1)",
+        "input": "0 1px 3px rgba(0, 0, 0, 0.05)",
+        "inputFocus": "0 0 0 3px rgba(0, 163, 255, 0.2)",
+        "elevated": "0 8px 24px rgba(0, 0, 0, 0.12)"
+    },
+    "components": {
+        "avatar": {
+            "sizes": {
+                "xs": {
+                    "size": "24px",
+                    "borderRadius": "8px"
+                },
+                "sm": {
+                    "size": "32px",
+                    "borderRadius": "10px"
+                },
+                "md": {
+                    "size": "40px",
+                    "borderRadius": "12px"
+                },
+                "lg": {
+                    "size": "48px",
+                    "borderRadius": "14px"
+                },
+                "xl": {
+                    "size": "56px",
+                    "borderRadius": "16px"
+                },
+                "2xl": {
+                    "size": "72px",
+                    "borderRadius": "20px"
+                }
+            },
+            "border": "2px solid #FFFFFF",
+            "shadow": "0 2px 8px rgba(0, 0, 0, 0.1)"
+        },
+        "chip": {
+            "default": {
+                "background": "#FFFFFF",
+                "border": "1px solid #E5E7EB",
+                "borderRadius": "9999px",
+                "padding": "8px 16px",
+                "fontSize": "14px",
+                "fontWeight": 500,
+                "color": "#1A1A1A"
+            },
+            "active": {
+                "background": "#1A1A1A",
+                "border": "1px solid #1A1A1A",
+                "color": "#FFFFFF"
+            },
+            "hover": {
+                "background": "#F8F9FA",
+                "border": "1px solid #D1D5DB"
+            }
+        },
+        "button": {
+            "primary": {
+                "background": "#1A1A1A",
+                "color": "#FFFFFF",
+                "borderRadius": "14px",
+                "padding": "14px 24px",
+                "fontSize": "16px",
+                "fontWeight": 600,
+                "shadow": "0 2px 8px rgba(0, 0, 0, 0.15)",
+                "hover": {
+                    "background": "#2D2D2D",
+                    "shadow": "0 4px 12px rgba(0, 0, 0, 0.2)"
+                },
+                "active": {
+                    "background": "#0A0A0A",
+                    "transform": "scale(0.98)"
+                }
+            },
+            "secondary": {
+                "background": "#FFFFFF",
+                "color": "#1A1A1A",
+                "border": "1px solid #E5E7EB",
+                "borderRadius": "14px",
+                "padding": "14px 24px",
+                "hover": {
+                    "background": "#F8F9FA",
+                    "border": "1px solid #D1D5DB"
+                }
+            },
+            "ghost": {
+                "background": "transparent",
+                "color": "#6B7280",
+                "padding": "8px 12px",
+                "hover": {
+                    "background": "#F8F9FA"
+                }
+            },
+            "icon": {
+                "size": "44px",
+                "borderRadius": "12px",
+                "background": "#1A1A1A",
+                "color": "#FFFFFF",
+                "hover": {
+                    "background": "#2D2D2D"
+                }
+            }
+        },
+        "input": {
+            "default": {
+                "background": "#FFFFFF",
+                "border": "1px solid #E5E7EB",
+                "borderRadius": "16px",
+                "padding": "14px 16px",
+                "fontSize": "16px",
+                "color": "#1A1A1A",
+                "placeholderColor": "#9CA3AF"
+            },
+            "focus": {
+                "border": "1px solid #00A3FF",
+                "shadow": "0 0 0 3px rgba(0, 163, 255, 0.15)"
+            },
+            "error": {
+                "border": "1px solid #EF4444",
+                "shadow": "0 0 0 3px rgba(239, 68, 68, 0.15)"
+            },
+            "chatInput": {
+                "background": "#FFFFFF",
+                "border": "1px solid #E5E7EB",
+                "borderRadius": "24px",
+                "padding": "12px 16px 12px 48px",
+                "minHeight": "52px"
+            }
+        },
+        "card": {
+            "polaroid": {
+                "background": "#FFFFFF",
+                "borderRadius": "16px",
+                "padding": "8px 8px 16px 8px",
+                "shadow": "0 4px 12px rgba(0, 0, 0, 0.08)",
+                "imageRadius": "12px",
+                "rotation": {
+                    "left": "-3deg",
+                    "center": "0deg",
+                    "right": "3deg"
+                },
+                "clipColor": "#00A3FF",
+                "clipSize": "20px"
+            },
+            "standard": {
+                "background": "#FFFFFF",
+                "borderRadius": "20px",
+                "padding": "16px",
+                "shadow": "0 4px 12px rgba(0, 0, 0, 0.08)",
+                "border": "none"
+            },
+            "elevated": {
+                "background": "#FFFFFF",
+                "borderRadius": "24px",
+                "padding": "20px",
+                "shadow": "0 8px 24px rgba(0, 0, 0, 0.12)"
+            }
+        },
+        "iconButton": {
+            "sizes": {
+                "sm": {
+                    "size": "32px",
+                    "iconSize": "16px"
+                },
+                "md": {
+                    "size": "40px",
+                    "iconSize": "20px"
+                },
+                "lg": {
+                    "size": "48px",
+                    "iconSize": "24px"
+                }
+            },
+            "variants": {
+                "default": {
+                    "background": "transparent",
+                    "color": "#6B7280",
+                    "hover": {
+                        "background": "#F8F9FA"
+                    }
+                },
+                "filled": {
+                    "background": "#1A1A1A",
+                    "color": "#FFFFFF",
+                    "hover": {
+                        "background": "#2D2D2D"
+                    }
+                }
+            }
+        },
+        "menuIcon": {
+            "lineWidth": "20px",
+            "lineHeight": "2px",
+            "lineSpacing": "6px",
+            "color": "#1A1A1A",
+            "borderRadius": "1px"
+        },
+        "mascot": {
+            "description": "Friendly 3D ghost character with playful expression",
+            "colors": {
+                "body": "#FFFFFF",
+                "eyes": "#1A1A1A",
+                "shadow": "rgba(0, 0, 0, 0.1)"
+            },
+            "style": "3D rendered, glossy, friendly expression"
+        }
+    },
+    "loadingStates": {
+        "spinner": {
+            "color": "#00A3FF",
+            "size": {
+                "sm": "16px",
+                "md": "24px",
+                "lg": "32px",
+                "xl": "48px"
+            },
+            "strokeWidth": "2px"
+        },
+        "skeleton": {
+            "baseColor": "#F0F2F5",
+            "highlightColor": "#FAFBFC",
+            "borderRadius": "8px",
+            "animation": "shimmer 1.5s infinite"
+        },
+        "pulse": {
+            "animation": "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite"
+        },
+        "progressBar": {
+            "background": "#F0F2F5",
+            "fill": "#00A3FF",
+            "height": "4px",
+            "borderRadius": "2px"
+        }
+    },
+    "animations": {
+        "transitions": {
+            "fast": "150ms ease-out",
+            "normal": "250ms ease-out",
+            "slow": "400ms ease-out",
+            "spring": "300ms cubic-bezier(0.34, 1.56, 0.64, 1)"
+        },
+        "hover": {
+            "lift": "translateY(-2px)",
+            "scale": "scale(1.02)",
+            "glow": "0 0 20px rgba(0, 163, 255, 0.3)"
+        },
+        "keyframes": {
+            "fadeIn": {
+                "from": {
+                    "opacity": 0
+                },
+                "to": {
+                    "opacity": 1
+                }
+            },
+            "slideUp": {
+                "from": {
+                    "opacity": 0,
+                    "transform": "translateY(10px)"
+                },
+                "to": {
+                    "opacity": 1,
+                    "transform": "translateY(0)"
+                }
+            },
+            "scaleIn": {
+                "from": {
+                    "opacity": 0,
+                    "transform": "scale(0.95)"
+                },
+                "to": {
+                    "opacity": 1,
+                    "transform": "scale(1)"
+                }
+            },
+            "shimmer": {
+                "0%": {
+                    "backgroundPosition": "-200% 0"
+                },
+                "100%": {
+                    "backgroundPosition": "200% 0"
+                }
+            }
+        }
+    },
+    "layout": {
+        "maxWidth": {
+            "sm": "640px",
+            "md": "768px",
+            "lg": "1024px",
+            "xl": "1280px"
+        },
+        "containerPadding": {
+            "mobile": "16px",
+            "tablet": "24px",
+            "desktop": "32px"
+        },
+        "grid": {
+            "columns": 12,
+            "gap": "16px",
+            "mobileGap": "12px"
+        },
+        "safeArea": {
+            "top": "env(safe-area-inset-top)",
+            "bottom": "env(safe-area-inset-bottom)"
+        }
+    },
+    "breakpoints": {
+        "xs": "320px",
+        "sm": "640px",
+        "md": "768px",
+        "lg": "1024px",
+        "xl": "1280px",
+        "2xl": "1536px"
+    },
+    "zIndex": {
+        "base": 0,
+        "dropdown": 100,
+        "sticky": 200,
+        "modal": 300,
+        "overlay": 400,
+        "toast": 500,
+        "tooltip": 600
+    },
+    "iconography": {
+        "style": "Rounded, friendly, consistent stroke width",
+        "strokeWidth": "1.5px",
+        "sizes": {
+            "xs": "12px",
+            "sm": "16px",
+            "md": "20px",
+            "lg": "24px",
+            "xl": "32px"
+        },
+        "commonIcons": {
+            "add": "Plus sign",
+            "menu": "Three horizontal lines (hamburger)",
+            "send": "Arrow pointing up in circle",
+            "voice": "Sound wave / microphone icon",
+            "close": "X mark",
+            "back": "Chevron left"
+        }
+    },
+    "illustrations": {
+        "style": "3D rendered, soft shadows, playful, friendly",
+        "mascot": {
+            "type": "Ghost character",
+            "expression": "Smiling, friendly",
+            "material": "Glossy white with subtle shadows"
+        },
+        "emptyStates": {
+            "style": "Simple line illustrations with accent colors"
+        }
+    }
+}

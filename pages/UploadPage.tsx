@@ -117,8 +117,8 @@ const UploadPage: React.FC = () => {
 
         if (!user) {
             // CRITICAL FIX: Preserve guest state before auth
-            // Save to sessionStorage so it can be restored after sign-in
-            sessionStorage.setItem('posterme_pending_generation', JSON.stringify({
+            // Save to localStorage (not sessionStorage) so it survives OAuth page redirect
+            localStorage.setItem('posterme_pending_generation', JSON.stringify({
                 uploadedImage,
                 personaId: selectedPersona.id,
                 timestamp: Date.now()
@@ -247,24 +247,32 @@ const UploadPage: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
-                            {filteredPersonas.map((persona) => (
-                                <PersonaCard
-                                    key={persona.id}
-                                    persona={persona}
-                                    isSelected={selectedPersona?.id === persona.id}
-                                    onClick={() => {
-                                        if (selectedPersona?.id !== persona.id) {
-                                            setSelectedPersona(persona);
-                                            setGeneratedImage(null);
-                                        }
-                                    }}
-                                />
-                            ))}
-
-                            {filteredPersonas.length === 0 && (
-                                <div className="col-span-full py-12 text-center text-zinc-500">
-                                    <p>No posters found in this category.</p>
-                                </div>
+                            {filteredPersonas.length > 0 ? (
+                                filteredPersonas.map((persona) => (
+                                    <PersonaCard
+                                        key={persona.id}
+                                        persona={persona}
+                                        isSelected={selectedPersona?.id === persona.id}
+                                        onClick={() => {
+                                            if (selectedPersona?.id !== persona.id) {
+                                                setSelectedPersona(persona);
+                                                setGeneratedImage(null);
+                                            }
+                                        }}
+                                    />
+                                ))
+                            ) : (
+                                // Skeleton loaders (fallback, should rarely show)
+                                [...Array(10)].map((_, i) => (
+                                    <div key={i} className="rounded-xl overflow-hidden bg-zinc-900 animate-pulse">
+                                        <div className="aspect-[2/3] w-full bg-zinc-800 relative">
+                                            <div className="absolute bottom-0 left-0 right-0 p-4">
+                                                <div className="h-2 w-12 bg-zinc-700 rounded mb-2"></div>
+                                                <div className="h-4 w-24 bg-zinc-700 rounded"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
                             )}
                         </div>
                     </div>

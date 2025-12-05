@@ -35,13 +35,13 @@ const App: React.FC = () => {
                 <Route path="/result" element={<ResultPage />} />
                 <Route path="/library" element={<LibraryPage />} />
                 <Route path="/admin" element={<AdminPage />} />
-                
+
                 {/* Legal Pages */}
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/refund-policy" element={<RefundPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
-                
+
                 {/* Catch-all redirect to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

@@ -186,8 +186,8 @@ const UserRow: React.FC<{
                 onToggleUnlimited(user.id, user.is_unlimited);
               }}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${user.is_unlimited
-                  ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
-                  : 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30'
+                ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
+                : 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30'
                 }`}
             >
               {user.is_unlimited ? 'Revoke Unlimited' : 'Grant Unlimited'}
@@ -725,101 +725,52 @@ const AdminPage: React.FC = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Fetch all data
+  // Last refresh timestamp
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+
+  // Fetch all data via Edge Function
   const fetchData = useCallback(async () => {
     if (!isAdmin) return;
 
     setLoading(true);
     try {
-      // Fetch users with their credit info
-      const { data: creditsData, error: creditsError } = await supabase
-        .from('user_credits')
-        .select('*');
+      // Call the admin-data Edge Function
+      const { data, error } = await supabase.functions.invoke('admin-data');
 
-      // Fetch all creations
-      const { data: creationsData, error: creationsError } = await supabase
-        .from('creations')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      // Fetch custom personas from DB
-      const { data: customPersonasData } = await supabase
-        .from('discovered_personas')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (creditsError) {
-        console.error('Error fetching credits:', creditsError);
-      }
-      if (creationsError) {
-        console.error('Error fetching creations:', creationsError);
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to fetch admin data');
       }
 
-      // Process users data
-      const userMap = new Map<string, UserData>();
+      if (!data) {
+        throw new Error('No data returned from admin endpoint');
+      }
 
-      (creditsData || []).forEach((credit: any) => {
-        userMap.set(credit.user_id, {
-          id: credit.user_id,
-          email: credit.email || credit.user_id.substring(0, 8) + '...',
-          created_at: credit.created_at || new Date().toISOString(),
-          credits: credit.credits || 0,
-          is_unlimited: credit.is_unlimited || false,
-          generation_count: 0,
-          last_generation: null,
-        });
-      });
+      // Set users directly from Edge Function response
+      setUsers(data.users || []);
 
-      (creationsData || []).forEach((creation: any) => {
-        const user = userMap.get(creation.user_id);
-        if (user) {
-          user.generation_count++;
-          if (!user.last_generation || new Date(creation.created_at) > new Date(user.last_generation)) {
-            user.last_generation = creation.created_at;
-          }
-        } else {
-          userMap.set(creation.user_id, {
-            id: creation.user_id,
-            email: creation.user_id.substring(0, 8) + '...',
-            created_at: creation.created_at,
-            credits: 0,
-            is_unlimited: false,
-            generation_count: 1,
-            last_generation: creation.created_at,
-          });
-        }
-      });
+      // Set stats
+      setStats(data.stats || null);
 
-      const usersArray = Array.from(userMap.values()).sort((a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      setUsers(usersArray);
-
-      // Process generations
-      const allPersonas = [...PERSONAS, ...(customPersonasData || [])];
-      const generationsArray: GenerationData[] = (creationsData || []).map((creation: any) => {
-        const persona = allPersonas.find(p => p.id === creation.persona_id);
-        const userEmail = userMap.get(creation.user_id)?.email || creation.user_id.substring(0, 8) + '...';
+      // Process generations with persona names
+      const allPersonas = [...PERSONAS, ...(data.personas || [])];
+      const generationsArray: GenerationData[] = (data.generations || []).map((g: any) => {
+        const persona = allPersonas.find(p => p.id === g.persona_id);
         return {
-          id: creation.id,
-          user_id: creation.user_id,
-          user_email: userEmail,
-          persona_id: creation.persona_id,
-          persona_name: persona?.name || creation.persona_id,
-          created_at: creation.created_at,
-          image_url: creation.image_url,
+          ...g,
+          persona_name: persona?.name || g.persona_id,
         };
       });
       setGenerations(generationsArray);
 
-      // Calculate persona stats
+      // Calculate persona stats from generations
       const personaCounts = new Map<string, number>();
-      (creationsData || []).forEach((creation: any) => {
-        const count = personaCounts.get(creation.persona_id) || 0;
-        personaCounts.set(creation.persona_id, count + 1);
+      (data.generations || []).forEach((g: any) => {
+        const count = personaCounts.get(g.persona_id) || 0;
+        personaCounts.set(g.persona_id, count + 1);
       });
 
-      const totalGenerations = creationsData?.length || 0;
+      const totalGenerations = data.generations?.length || 0;
       const personaStatsArray: PersonaStats[] = Array.from(personaCounts.entries())
         .map(([id, count]) => {
           const persona = allPersonas.find(p => p.id === id);
@@ -834,9 +785,8 @@ const AdminPage: React.FC = () => {
       setPersonaStats(personaStatsArray);
 
       // Build managed personas list
-      // DB personas take precedence over built-in ones (allows editing/hiding built-ins)
       const dbPersonaMap = new Map<string, any>();
-      (customPersonasData || []).forEach((p: any) => {
+      (data.personas || []).forEach((p: any) => {
         dbPersonaMap.set(p.id, p);
       });
 
@@ -846,7 +796,6 @@ const AdminPage: React.FC = () => {
       PERSONAS.forEach((p, i) => {
         const dbOverride = dbPersonaMap.get(p.id);
         if (dbOverride) {
-          // Use DB version (edited built-in persona)
           managed.push({
             id: dbOverride.id,
             name: dbOverride.name,
@@ -856,9 +805,8 @@ const AdminPage: React.FC = () => {
             order: dbOverride.display_order ?? i,
             isVisible: dbOverride.is_visible !== false,
           });
-          dbPersonaMap.delete(p.id); // Remove so we don't add it again
+          dbPersonaMap.delete(p.id);
         } else {
-          // Use built-in version
           managed.push({
             ...p,
             order: i,
@@ -867,8 +815,8 @@ const AdminPage: React.FC = () => {
         }
       });
 
-      // Add remaining custom personas (ones not overriding built-ins)
-      dbPersonaMap.forEach((p, _id) => {
+      // Add remaining custom personas
+      dbPersonaMap.forEach((p) => {
         managed.push({
           id: p.id,
           name: p.name,
@@ -882,50 +830,34 @@ const AdminPage: React.FC = () => {
 
       // Sort by order
       managed.sort((a, b) => a.order - b.order);
-
       setManagedPersonas(managed);
 
-      // Calculate stats
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const weekStart = new Date(todayStart);
-      weekStart.setDate(weekStart.getDate() - 7);
+      setLastRefresh(new Date());
 
-      const generationsToday = (creationsData || []).filter(
-        (c: any) => new Date(c.created_at) >= todayStart
-      ).length;
-
-      const generationsThisWeek = (creationsData || []).filter(
-        (c: any) => new Date(c.created_at) >= weekStart
-      ).length;
-
-      const totalCreditsRemaining = (creditsData || []).reduce(
-        (sum: number, c: any) => sum + (c.credits || 0), 0
-      );
-
-      setStats({
-        totalUsers: usersArray.length,
-        totalGenerations,
-        totalCreditsConsumed: totalGenerations,
-        totalCreditsRemaining,
-        generationsToday,
-        generationsThisWeek,
-        cacheHitRate: 0,
-        avgGenerationsPerUser: usersArray.length > 0 ? totalGenerations / usersArray.length : 0,
-      });
-
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching admin data:', error);
-      toast.error('Failed to load admin data');
+      toast.error(error.message || 'Failed to load admin data');
     } finally {
       setLoading(false);
     }
   }, [isAdmin]);
 
+  // Initial fetch when admin
   useEffect(() => {
     if (isAdmin) {
       fetchData();
     }
+  }, [isAdmin, fetchData]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [isAdmin, fetchData]);
 
   // User actions
@@ -1308,15 +1240,23 @@ const AdminPage: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={fetchData}
-              className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
+            <div className="flex items-center gap-4">
+              {lastRefresh && (
+                <span className="text-xs text-zinc-500 hidden sm:block">
+                  Updated {lastRefresh.toLocaleTimeString()}
+                </span>
+              )}
+              <button
+                onClick={fetchData}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {loading ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1336,8 +1276,8 @@ const AdminPage: React.FC = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`px-4 sm:px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
-                    ? 'border-blue-500 text-white'
-                    : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                  ? 'border-blue-500 text-white'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-300'
                   }`}
               >
                 <span className="mr-2">{tab.icon}</span>
@@ -1655,8 +1595,8 @@ const AdminPage: React.FC = () => {
                     key={method.id}
                     onClick={() => handleSortChange(method.id as any)}
                     className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${sortMethod === method.id
-                        ? 'bg-zinc-700 text-white shadow-sm'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                      ? 'bg-zinc-700 text-white shadow-sm'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                       }`}
                   >
                     {method.label}
@@ -1686,8 +1626,8 @@ const AdminPage: React.FC = () => {
                   key={cat}
                   onClick={() => setPersonaSearchQuery(cat === 'All' ? '' : cat)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${(cat === 'All' && !personaSearchQuery) || personaSearchQuery.toLowerCase() === cat.toLowerCase()
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                     }`}
                 >
                   {cat}

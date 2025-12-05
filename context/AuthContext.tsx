@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
       // CRITICAL FIX: Restore guest state after sign-in
       if (session?.user && _event === 'SIGNED_IN') {
-        const pendingData = sessionStorage.getItem('posterme_pending_generation');
+        const pendingData = localStorage.getItem('posterme_pending_generation');
         if (pendingData) {
           try {
             const { uploadedImage, personaId, timestamp } = JSON.parse(pendingData);
@@ -46,19 +46,19 @@ export const AuthProvider = ({ children }) => {
             const isRecent = (Date.now() - timestamp) < 10 * 60 * 1000;
 
             if (isRecent && uploadedImage && personaId) {
-              // Clear session storage first
-              sessionStorage.removeItem('posterme_pending_generation');
+              // Clear localStorage first
+              localStorage.removeItem('posterme_pending_generation');
 
               // Dispatch custom event to ImageContext to restore state
               window.dispatchEvent(new CustomEvent('restore-generation-state', {
                 detail: { uploadedImage, personaId }
               }));
             } else {
-              sessionStorage.removeItem('posterme_pending_generation');
+              localStorage.removeItem('posterme_pending_generation');
             }
           } catch (e) {
             console.error("Failed to restore generation state:", e);
-            sessionStorage.removeItem('posterme_pending_generation');
+            localStorage.removeItem('posterme_pending_generation');
           }
         }
       }

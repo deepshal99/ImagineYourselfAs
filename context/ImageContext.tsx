@@ -445,27 +445,56 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
     // CRITICAL FIX: Listen for guest state restoration after sign-in
     useEffect(() => {
         const handleRestore = (event: any) => {
-            const { uploadedImage, personaId } = event.detail;
+            const { uploadedImage: restoredImage, personaId } = event.detail;
 
-            // Restore state
-            setUploadedImage(uploadedImage);
+            // Restore uploaded image
+            if (restoredImage) {
+                setUploadedImage(restoredImage);
+            }
 
-            // Find and set persona
-            const persona = PERSONAS.find(p => p.id === personaId);
+            // Find persona in full list (includes dynamic personas)
+            const persona = personas.find(p => p.id === personaId) || PERSONAS.find(p => p.id === personaId);
             if (persona) {
                 setSelectedPersona(persona);
                 setGeneratedImage(null);
-
-                // Navigate to result page
-                setTimeout(() => {
-                    navigate('/result');
-                }, 100);
+                // Don't auto-navigate - user is already on upload page with state restored
             }
         };
 
         window.addEventListener('restore-generation-state', handleRestore);
         return () => window.removeEventListener('restore-generation-state', handleRestore);
-    }, [user]);
+    }, [personas]);
+
+    // BACKUP: Also check localStorage directly when user becomes available
+    // This handles cases where the event fires before this listener is ready
+    useEffect(() => {
+        if (user) {
+            const pendingData = localStorage.getItem('posterme_pending_generation');
+            if (pendingData) {
+                try {
+                    const { uploadedImage: restoredImage, personaId, timestamp } = JSON.parse(pendingData);
+                    const isRecent = (Date.now() - timestamp) < 10 * 60 * 1000;
+
+                    if (isRecent && restoredImage && personaId) {
+                        localStorage.removeItem('posterme_pending_generation');
+
+                        // Restore state
+                        setUploadedImage(restoredImage);
+                        const persona = personas.find(p => p.id === personaId) || PERSONAS.find(p => p.id === personaId);
+                        if (persona) {
+                            setSelectedPersona(persona);
+                            setGeneratedImage(null);
+                        }
+                    } else {
+                        localStorage.removeItem('posterme_pending_generation');
+                    }
+                } catch (e) {
+                    console.error("Failed to restore pending generation:", e);
+                    localStorage.removeItem('posterme_pending_generation');
+                }
+            }
+        }
+    }, [user, personas]);
 
     const saveToLibrary = async (imageUrl: string, personaId: string) => {
         // 1. Optimistic update
