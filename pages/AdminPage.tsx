@@ -538,6 +538,7 @@ interface DraggablePersonaCardProps {
   persona: ManagedPersona;
   index: number;
   stat?: PersonaStats;
+  feedback?: { likes: number; dislikes: number };
   onEdit: () => void;
   onDelete: () => void;
   onToggleVisibility: () => void;
@@ -552,6 +553,7 @@ const DraggablePersonaCard: React.FC<DraggablePersonaCardProps> = ({
   persona,
   index,
   stat,
+  feedback,
   onEdit,
   onDelete,
   onToggleVisibility,
@@ -609,9 +611,21 @@ const DraggablePersonaCard: React.FC<DraggablePersonaCardProps> = ({
       </div>
 
       {/* Stats */}
-      <div className="text-right mr-4">
-        <p className="text-white font-bold">{stat?.count || 0}</p>
-        <p className="text-zinc-500 text-xs">uses</p>
+      <div className="flex items-center gap-4 mr-4">
+        <div className="text-center">
+          <p className="text-white font-bold">{stat?.count || 0}</p>
+          <p className="text-zinc-500 text-xs">uses</p>
+        </div>
+        {feedback && (feedback.likes > 0 || feedback.dislikes > 0) && (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="flex items-center gap-1 text-green-400">
+              <span>👍</span>{feedback.likes}
+            </span>
+            <span className="flex items-center gap-1 text-red-400">
+              <span>👎</span>{feedback.dislikes}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Actions */}
@@ -683,6 +697,7 @@ const AdminPage: React.FC = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [generations, setGenerations] = useState<GenerationData[]>([]);
   const [personaStats, setPersonaStats] = useState<PersonaStats[]>([]);
+  const [feedbackStats, setFeedbackStats] = useState<Record<string, { likes: number; dislikes: number }>>({});
   const [searchQuery, setSearchQuery] = useState('');
 
   // Persona management states
@@ -832,6 +847,9 @@ const AdminPage: React.FC = () => {
       managed.sort((a, b) => a.order - b.order);
       setManagedPersonas(managed);
 
+      // Set feedback stats from Edge Function response
+      setFeedbackStats(data.feedbackStats || {});
+
       setLastRefresh(new Date());
 
     } catch (error: any) {
@@ -849,16 +867,8 @@ const AdminPage: React.FC = () => {
     }
   }, [isAdmin, fetchData]);
 
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    if (!isAdmin) return;
-
-    const interval = setInterval(() => {
-      fetchData();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [isAdmin, fetchData]);
+  // Auto-refresh removed to prevent constant reloading
+  // Manual refresh via the refresh button is preferred
 
   // User actions
   const handleAddCredits = async (userId: string, amount: number) => {
@@ -1643,6 +1653,7 @@ const AdminPage: React.FC = () => {
                   persona={persona}
                   index={index}
                   stat={personaStats.find(s => s.id === persona.id)}
+                  feedback={feedbackStats[persona.id]}
                   onEdit={() => {
                     setEditingPersona(persona);
                     setIsNewPersona(false);

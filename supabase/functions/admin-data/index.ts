@@ -91,6 +91,27 @@ serve(async (req) => {
             console.error('Error fetching personas:', personasError);
         }
 
+        // 8. Fetch feedback stats grouped by persona
+        const { data: feedbackData, error: feedbackError } = await adminClient
+            .from('generation_feedback')
+            .select('persona_id, feedback_type');
+
+        if (feedbackError) {
+            console.error('Error fetching feedback:', feedbackError);
+        }
+
+        // Calculate feedback counts per persona
+        const feedbackStats = new Map<string, { likes: number; dislikes: number }>();
+        (feedbackData || []).forEach((f: any) => {
+            const existing = feedbackStats.get(f.persona_id) || { likes: 0, dislikes: 0 };
+            if (f.feedback_type === 'like') {
+                existing.likes++;
+            } else if (f.feedback_type === 'dislike') {
+                existing.dislikes++;
+            }
+            feedbackStats.set(f.persona_id, existing);
+        });
+
         // 8. Build combined user data
         const creditsMap = new Map<string, any>();
         (creditsData || []).forEach((c: any) => {
@@ -177,6 +198,7 @@ serve(async (req) => {
             stats,
             generations,
             personas: personasData || [],
+            feedbackStats: Object.fromEntries(feedbackStats),
             timestamp: new Date().toISOString()
         }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
