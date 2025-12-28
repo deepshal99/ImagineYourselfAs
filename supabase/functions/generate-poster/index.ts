@@ -81,6 +81,11 @@ serve(async (req) => {
     // Try primary model, fallback to standard if needed
     let model = "gemini-3-pro-image-preview"; // Or "imagen-3.0-generate-001"
     let genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    console.log(`Generating with config:`, {
+      model,
+      imageSize: base64Image.length,
+      hasPrompt: !!prompt
+    });
 
     let genResp = await fetch(genUrl, {
       method: 'POST',
@@ -94,27 +99,16 @@ serve(async (req) => {
         }],
         generationConfig: {
           temperature: 1.0,
-          imageConfig: { aspectRatio: "1:1" }
+          responseModalities: ["IMAGE"],
+          imageConfig: {
+            aspectRatio: "1:1",
+            // imageSize: "2K"
+          }
         }
       })
     });
 
-    // Fallback logic
-    if (genResp.status === 404) {
-      model = "imagen-3.0-generate-001";
-      genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      genResp = await fetch(genUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: finalPrompt }] }], // Imagen 3 might not support multimodal input the same way, but let's try or simplify
-          generationConfig: {
-            temperature: 1.0,
-            imageConfig: { aspectRatio: "1:1" }
-          }
-        })
-      });
-    }
+
 
     if (!genResp.ok) throw new Error(`Generation failed: ${await genResp.text()}`);
 

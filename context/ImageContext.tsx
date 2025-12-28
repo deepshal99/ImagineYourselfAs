@@ -156,122 +156,94 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
 
 
     const buyCredits = async () => {
-        // TEMPORARILY DISABLED: Show "Coming Soon" message
-        toast.info("💳 Credit purchases coming soon! Stay tuned.", {
-            duration: 3000
-        });
-        return;
-
-        // Original payment code disabled for now
-        /*
         if (!user) {
             toast.error("Please sign in to buy credits");
             return;
         }
-        
+
         const toastId = toast.loading("Initiating Payment...");
-  
+
         try {
-            // Use origin + pathname + placeholder for Cashfree to inject the order_id
-            const returnUrl = window.location.origin + window.location.pathname + "?order_id={order_id}";
-  
             // 1. Create Order via Edge Function
             const { data, error } = await supabase.functions.invoke('payment-handler', {
-                body: { 
-                    action: 'create_order',
-                    returnUrl: returnUrl
+                body: {
+                    action: 'create_order'
                 }
             });
-            
+
             if (error) throw error;
-            if (!data.payment_session_id) throw new Error("No payment session received");
-  
-            console.log("Payment Session Created:", data);
-  
-            // 2. Initialize Cashfree SDK
+            if (!data.order_id) throw new Error("No order received");
+
+            toast.dismiss(toastId);
+
+            // 2. Open Razorpay Checkout
             // @ts-ignore
-            if (!window.Cashfree) {
-                throw new Error("Cashfree SDK not loaded");
+            if (!window.Razorpay) {
+                throw new Error("Razorpay SDK not loaded");
             }
-            
+
+            const options = {
+                key: data.key_id,
+                amount: data.amount,
+                currency: data.currency,
+                name: 'PosterMe',
+                description: '5 Credits for PosterMe',
+                order_id: data.order_id,
+                handler: async function (response: any) {
+                    // Payment successful - verify on server
+                    const verifyToast = toast.loading("Verifying payment...");
+                    try {
+                        const { data: verifyData, error: verifyError } = await supabase.functions.invoke('payment-handler', {
+                            body: {
+                                action: 'verify_payment',
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            }
+                        });
+
+                        if (verifyError) throw verifyError;
+
+                        if (verifyData.success) {
+                            toast.dismiss(verifyToast);
+                            setShowSuccessModal(true);
+                            await fetchCredits();
+                        } else {
+                            toast.error(verifyData.message || "Payment verification failed", { id: verifyToast });
+                        }
+                    } catch (e: any) {
+                        console.error("Payment verification failed:", e);
+                        toast.error("Failed to verify payment. Please contact support.", { id: verifyToast });
+                    }
+                },
+                prefill: {
+                    email: user.email || ''
+                },
+                theme: {
+                    color: '#3B82F6'
+                },
+                modal: {
+                    ondismiss: function () {
+                        toast.info("Payment cancelled");
+                    }
+                }
+            };
+
             // @ts-ignore
-            const cashfree = new window.Cashfree({
-                mode: import.meta.env.PROD ? "production" : "sandbox"
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response: any) {
+                console.error("Payment failed:", response.error);
+                toast.error(response.error.description || "Payment failed. Please try again.");
             });
-  
-            // 3. Open Checkout
-            await cashfree.checkout({
-                paymentSessionId: data.payment_session_id,
-                redirectTarget: "_self" // Redirects the page
-            });
-            
+            rzp.open();
+
         } catch (error: any) {
             console.error("Buy credits failed", error);
-            
-            let errorMessage = error.message || "Failed to initiate payment";
-            
-            // Try to extract the actual error message from the Edge Function response
-            if (error && typeof error === 'object' && 'context' in error) {
-                try {
-                    const errorBody = await error.context.json();
-                    if (errorBody && errorBody.error) {
-                        errorMessage = errorBody.error;
-                        console.error("Edge Function Error Body:", errorBody);
-                    }
-                } catch (e) {
-                    // Failed to parse body
-                }
-            }
-  
-            toast.error(errorMessage, { id: toastId });
+            toast.error(error.message || "Failed to initiate payment", { id: toastId });
         }
-        */
     };
 
-    // Check for Payment Return (Cashfree)
-    useEffect(() => {
-        const checkPayment = async () => {
-            const query = new URLSearchParams(window.location.search);
-            const orderId = query.get('order_id');
-
-            if (orderId) {
-                if (!user) {
-                    return; // Wait for user to be loaded
-                }
-
-                // Clear the URL immediately to prevent loops
-                window.history.replaceState({}, document.title, window.location.pathname);
-
-                const toastId = toast.loading("Verifying payment...");
-
-                try {
-                    const { data, error } = await supabase.functions.invoke('payment-handler', {
-                        body: {
-                            action: 'verify_payment',
-                            order_id: orderId
-                        }
-                    });
-
-                    if (error) {
-                        throw error;
-                    }
-
-                    if (data.success) {
-                        // Success! Show Modal
-                        toast.dismiss(toastId);
-                        setShowSuccessModal(true);
-                        await fetchCredits();
-                    } else {
-                        toast.error(data.message || "Payment not completed.", { id: toastId });
-                    }
-                } catch (e: any) {
-                    toast.error("Failed to verify payment.", { id: toastId });
-                }
-            }
-        };
-
-        checkPayment();
-    }, [user]);
+    // Note: Razorpay uses inline callbacks, no URL-based return verification needed
 
     // Persist uploadedImage changes and compute hash for face description caching
     useEffect(() => {

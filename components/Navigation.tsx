@@ -75,8 +75,8 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                                     onClick={() => !isUnlimited && setIsCreditMenuOpen(!isCreditMenuOpen)}
                                     disabled={isUnlimited}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all active:scale-95 ${isUnlimited || credits > 0
-                                            ? 'bg-zinc-800/50 border-zinc-700 text-zinc-300 hover:bg-zinc-800 cursor-pointer'
-                                            : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 cursor-pointer animate-pulse'
+                                        ? 'bg-zinc-800/50 border-zinc-700 text-zinc-300 hover:bg-zinc-800 cursor-pointer'
+                                        : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 cursor-pointer animate-pulse'
                                         } ${isUnlimited ? 'cursor-default hover:bg-zinc-800/50' : ''}`}
                                     title={isUnlimited ? "Unlimited Plan" : "Buy Credits"}
                                 >
@@ -136,13 +136,16 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                                                     </div>
 
                                                     <button
-                                                        disabled
-                                                        className="w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg text-sm cursor-not-allowed flex items-center justify-center gap-2"
+                                                        onClick={() => {
+                                                            setIsCreditMenuOpen(false);
+                                                            buyCredits();
+                                                        }}
+                                                        className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                                         </svg>
-                                                        Coming Soon
+                                                        Buy Now
                                                     </button>
                                                 </div>
                                             </div>

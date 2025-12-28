@@ -78,10 +78,10 @@ export const ContactPage: React.FC = () => (
   <LegalLayout title="Contact Us">
     <div className="space-y-6 text-zinc-300">
       <p className="text-lg">We'd love to hear from you. Whether you have a question about features, pricing, or need technical support, our team is ready to answer all your questions.</p>
-      
+
       <div className="bg-zinc-900/50 p-6 rounded-xl border border-zinc-800 mt-8">
         <h3 className="text-xl font-bold text-white mb-4">Get in Touch</h3>
-        
+
         <div className="space-y-4">
           <div>
             <p className="text-sm text-zinc-500 font-bold uppercase tracking-wider">Email Support</p>
@@ -117,7 +117,7 @@ export const PrivacyPage: React.FC = () => (
 
       <section>
         <h2 className="text-xl font-bold text-white mb-2">3. Third Parties</h2>
-        <p>We use secure third-party payment gateways (Cashfree) for processing payments. We do not store your credit card information on our servers.</p>
+        <p>We use secure third-party payment gateways (Razorpay) for processing payments. We do not store your credit card information on our servers.</p>
       </section>
     </div>
   </LegalLayout>
