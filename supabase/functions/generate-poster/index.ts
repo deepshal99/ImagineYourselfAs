@@ -76,8 +76,8 @@ serve(async (req) => {
     }
 
     // Step B: Image Generation
-    const starringText = userName ? ` Starring ${userName}.` : '';
-    const finalPrompt = `Movie poster style. ${prompt}.${starringText} Use the attached reference image for the main character's face. The character should look exactly like the person in the image (Ethnicity: ${faceDescription}). High quality, cinematic lighting.`;
+    // const starringText = userName ? ` Starring ${userName}.` : '';
+    const finalPrompt = `Movie poster style. ${prompt}. Use the attached reference image for the main character's face. The character should look exactly like the person in the image (Ethnicity: ${faceDescription}). High quality, cinematic lighting.`;
 
     // Try primary model, fallback to standard if needed
     let model = "gemini-3-pro-image-preview"; // Or "imagen-3.0-generate-001"
