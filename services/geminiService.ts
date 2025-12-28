@@ -21,7 +21,8 @@ export const generateImageHash = async (base64Image: string): Promise<string> =>
 export const generatePersonaImage = async (
   base64Image: string,
   prompt: string,
-  cachedFaceDescription?: string | null
+  cachedFaceDescription?: string | null,
+  userName?: string | null
 ): Promise<GenerationResult> => {
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -37,6 +38,7 @@ export const generatePersonaImage = async (
       base64Image,
       prompt,
       cachedFaceDescription: cachedFaceDescription || undefined,
+      userName: userName || undefined,
     },
   });
 
