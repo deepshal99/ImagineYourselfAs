@@ -35,21 +35,16 @@ export const AuthProvider = ({ children }) => {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // CRITICAL FIX: Restore guest state after sign-in
+      // Restore guest state after sign-in
       if (session?.user && _event === 'SIGNED_IN') {
         const pendingData = localStorage.getItem('posterme_pending_generation');
         if (pendingData) {
           try {
             const { uploadedImage, personaId, timestamp } = JSON.parse(pendingData);
-
-            // Check if data is recent (within 10 minutes)
             const isRecent = (Date.now() - timestamp) < 10 * 60 * 1000;
 
             if (isRecent && uploadedImage && personaId) {
-              // Clear localStorage first
               localStorage.removeItem('posterme_pending_generation');
-
-              // Dispatch custom event to ImageContext to restore state
               window.dispatchEvent(new CustomEvent('restore-generation-state', {
                 detail: { uploadedImage, personaId }
               }));
@@ -69,29 +64,22 @@ export const AuthProvider = ({ children }) => {
 
   const signInWithGoogle = async () => {
     try {
-      console.log("Initiating Google Sign-In...");
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,
-          skipBrowserRedirect: true // We will handle the redirect manually to ensure it works
+          skipBrowserRedirect: true
         }
       });
 
-      console.log("Supabase Auth Response:", { data, error });
-
       if (error) throw error;
 
-      // If we get here, Supabase should have triggered a redirect.
-      // If data.url exists, we can manually redirect if the SDK didn't.
       if (data?.url) {
-        console.log("Manual redirecting to:", data.url);
         window.location.href = data.url;
       }
-
     } catch (error) {
       console.error("Error signing in with Google:", error);
-      alert("Failed to sign in with Google. Please check console for details.");
+      alert("Failed to sign in with Google. Please try again.");
     }
   };
 
@@ -102,17 +90,13 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Error signing out:", error);
     } finally {
-      // Force clear local state even if network request fails
       setSession(null);
       setUser(null);
       localStorage.removeItem('posterme_uploaded_image');
       localStorage.removeItem('posterme_selected_persona_id');
       localStorage.removeItem('posterme_credits');
       localStorage.removeItem('posterme_is_unlimited');
-      localStorage.removeItem('posterme_library'); // Optional: clear guest library if needed, but maybe keep it?
-      // Keeping guest library might be good if they login again, but for security/privacy on logout usually clear.
-      // Assuming we want to clear everything:
-      // localStorage.clear(); // Too aggressive?
+      localStorage.removeItem('posterme_library');
     }
   };
 
@@ -130,4 +114,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

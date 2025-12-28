@@ -119,9 +119,7 @@ const ResultPage: React.FC = () => {
             return;
         }
 
-        // REQUEST DEDUPLICATION: Prevent multiple simultaneous API calls
         if (isGeneratingRef.current) {
-            console.log("Generation already in progress, ignoring duplicate request");
             return;
         }
 
@@ -196,8 +194,7 @@ const ResultPage: React.FC = () => {
                 setWaitingForKey(true);
                 setError(null);
             } else if (errorMessage.includes("Duplicate request") || errorMessage.includes("already in progress")) {
-                // Don't show error for duplicate requests, just silently ignore
-                console.log("Duplicate request detected, ignoring");
+                // Silently ignore duplicate requests
             } else if (errorMessage.includes("Insufficient credits")) {
                 setCreditsExhausted(true);
                 setError(null);

@@ -59,12 +59,7 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
             return;
         }
 
-        // Attempt lazy daily claim on load
-        try {
-            await supabase.rpc('claim_daily_credit');
-        } catch (_e) {
-            // Ignore error, just proceed to fetch
-        }
+
 
         try {
             const { data, error } = await supabase
@@ -92,17 +87,6 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
     const checkCredits = async (): Promise<boolean> => {
         if (!user) return false;
         await fetchCredits();
-
-        // Attempt to claim daily credit first (lazy evaluation)
-        try {
-            const { data } = await supabase.rpc('claim_daily_credit');
-            if (data === true) {
-                await fetchCredits(); // Refresh if we just got a credit
-                return true; // We definitely have credit now
-            }
-        } catch (e) {
-            console.error("Failed to check daily claim", e);
-        }
 
         const { data } = await supabase
             .from('user_credits')
