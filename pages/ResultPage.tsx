@@ -173,12 +173,13 @@ const ResultPage: React.FC = () => {
             }
 
             // COST OPTIMIZATION: Pass cached face description if available
-            // Pass user's name for "Starring" text on poster
+            // Pass user's name and personaId for auto-saving
             const result = await generatePersonaImage(
                 uploadedImage,
                 selectedPersona.prompt,
                 cachedFaceDescription, // Pass cached description if available
-                user?.user_metadata?.full_name || user?.user_metadata?.name
+                user?.user_metadata?.full_name || user?.user_metadata?.name,
+                selectedPersona.id // Pass personaId for auto-saving
             );
 
             // Cache the face description for future generations with the same photo

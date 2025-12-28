@@ -45,7 +45,7 @@ serve(async (req) => {
     creditDeducted = true; // Mark as deducted for potential refund
 
     // 5. Parse Request
-    const { base64Image, prompt, cachedFaceDescription, userName } = await req.json();
+    const { base64Image, prompt, cachedFaceDescription, userName, personaId } = await req.json();
     if (!base64Image || !prompt) throw new Error("Missing required fields");
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -123,11 +123,55 @@ serve(async (req) => {
 
     if (!resultImage) throw new Error("No image generated");
 
-    // 7. Success Response
+    // 7. Auto-save to Storage and DB
+    let savedImageUrl = null;
+    try {
+      // Create admin client for storage access
+      const adminClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      // Extract base64 data and convert to Uint8Array
+      const base64Data = resultImage.split(',')[1];
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // Upload to storage
+      const fileName = `${userId}/${Date.now()}.png`;
+      const { error: uploadError } = await adminClient.storage
+        .from('creations')
+        .upload(fileName, bytes, { contentType: 'image/png' });
+
+      if (!uploadError) {
+        const { data: { publicUrl } } = adminClient.storage
+          .from('creations')
+          .getPublicUrl(fileName);
+        savedImageUrl = publicUrl;
+
+        // Save to creations table
+        await adminClient.from('creations').insert({
+          user_id: userId,
+          persona_id: personaId || 'unknown',
+          image_url: savedImageUrl
+        });
+      } else {
+        console.warn("Failed to upload image:", uploadError);
+      }
+    } catch (saveError) {
+      // Don't fail the request if save fails - just log it
+      console.warn("Failed to auto-save image:", saveError);
+    }
+
+    // 8. Success Response
     return new Response(JSON.stringify({
       image: resultImage,
       faceDescription,
-      cached: !!cachedFaceDescription
+      cached: !!cachedFaceDescription,
+      savedUrl: savedImageUrl
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200
