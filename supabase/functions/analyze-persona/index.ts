@@ -25,7 +25,7 @@ serve(async (req) => {
     }
 
     // Use Gemini to analyze the character/movie
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${apiKey}`;
 
     let systemPrompt = `
     You are an expert creative director for a movie poster AI app.

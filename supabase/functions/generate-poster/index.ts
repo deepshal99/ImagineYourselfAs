@@ -56,7 +56,7 @@ serve(async (req) => {
     // Step A: Face Description (if not cached)
     let faceDescription = cachedFaceDescription;
     if (!faceDescription) {
-      const visionResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const visionResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -84,18 +84,23 @@ serve(async (req) => {
       { inline_data: { mime_type: 'image/jpeg', data: base64Image.split(',')[1] || base64Image } }
     ];
 
-    if (referenceDescription) {
+    if (referenceDescription && !referenceImage) {
       finalPrompt += ` CRITICAL STYLE DIRECTION: ${referenceDescription}. The final result must strictly follow this visual style, composition, and lighting while featuring the person from the headshot.`;
       parts[0].text = finalPrompt;
       // When we have a text description, we DON'T send the reference image to save costs
       console.log("Using reference description for style guidance (saving image tokens)");
     } else if (referenceImage) {
       finalPrompt += ` CRITICAL: Use the attached SECOND image (the reference poster) as a guide for the overall direction, composition, lighting, and style. The final result should feel like it belongs in the same world as the reference poster but features the person from the headshot.`;
+      // If it's a transient user reference, emphasize it more
+      if (!referenceDescription) {
+        finalPrompt += ` Prioritize THIS exact reference style over any general instructions.`;
+      }
+
       // Update the text part with the new prompt
       parts[0].text = finalPrompt;
 
       try {
-        console.log("Fetching reference image (no description available):", referenceImage);
+        console.log("Fetching reference image:", referenceImage);
         const resp = await fetch(referenceImage);
         const blob = await resp.blob();
         const buffer = await blob.arrayBuffer();
@@ -107,7 +112,7 @@ serve(async (req) => {
     }
 
     // Try primary model, fallback to standard if needed
-    let model = "gemini-3-pro-image-preview"; // Or "imagen-3.0-generate-001"
+    let model = "gemini-3-pro";
     let genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     console.log(`Generating with config:`, {
       model,

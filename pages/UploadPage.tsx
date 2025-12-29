@@ -73,12 +73,18 @@ const AuthModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 const UploadPage: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { uploadedImage, setUploadedImage, selectedPersona, setSelectedPersona, personas, setGeneratedImage } = useImageContext();
+    const {
+        uploadedImage, setUploadedImage,
+        selectedPersona, setSelectedPersona,
+        personas, setGeneratedImage,
+        userReferenceImage, setUserReferenceImage
+    } = useImageContext();
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [activeCategory, setActiveCategory] = useState<string>('All');
     const [isDragging, setIsDragging] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const refInputRef = useRef<HTMLInputElement>(null);
 
     // Filter personas based on category
     const filteredPersonas = activeCategory === 'All'
@@ -105,6 +111,23 @@ const UploadPage: React.FC = () => {
         setUploadedImage(null);
         setGeneratedImage(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleRefFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setUserReferenceImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleClearRefImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setUserReferenceImage(null);
+        if (refInputRef.current) refInputRef.current.value = '';
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -240,6 +263,64 @@ const UploadPage: React.FC = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Style Reference Upload (Optional) */}
+                        <div className="mt-8 pt-8 border-t border-zinc-800/50">
+                            <div className="mb-4">
+                                <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                                    </svg>
+                                    Optional: Style Reference
+                                </h2>
+                                <p className="text-zinc-500 text-xs text-balance">Override the persona's lighting and composition with your own reference.</p>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                {!userReferenceImage ? (
+                                    <button
+                                        onClick={() => refInputRef.current?.click()}
+                                        className="flex-1 py-4 bg-zinc-800/50 border border-dashed border-zinc-700 rounded-xl flex items-center justify-center gap-3 hover:bg-zinc-800 hover:border-zinc-500 transition-all group"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        </div>
+                                        <span className="text-sm font-medium text-zinc-300">Add Style Direction</span>
+                                    </button>
+                                ) : (
+                                    <div className="relative w-full aspect-[2/1] rounded-xl overflow-hidden border border-zinc-700 group">
+                                        <img src={userReferenceImage} className="w-full h-full object-cover" alt="Reference" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={handleClearRefImage}
+                                                className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={() => refInputRef.current?.click()}
+                                                className="p-2 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors shadow-lg"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    ref={refInputRef}
+                                    onChange={handleRefFileChange}
+                                    accept="image/*"
+                                    className="hidden"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

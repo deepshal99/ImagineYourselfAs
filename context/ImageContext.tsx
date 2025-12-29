@@ -44,6 +44,7 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
     const [cachedFaceDescription, setCachedFaceDescription] = useState<string | null>(null);
     const [imageHash, setImageHash] = useState<string | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [userReferenceImage, setUserReferenceImage] = useState<string | null>(null);
 
     // Persist credits and unlimited status
     useEffect(() => {
@@ -569,7 +570,9 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
                 setCachedFaceDescription,
                 imageHash,
                 showSuccessModal,
-                setShowSuccessModal
+                setShowSuccessModal,
+                userReferenceImage,
+                setUserReferenceImage
             }}
         >
             {children}
