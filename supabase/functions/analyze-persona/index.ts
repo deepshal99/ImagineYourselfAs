@@ -56,7 +56,10 @@ serve(async (req) => {
     "Create an official Apple TV+ SEVERANCE poster image featuring the person in the uploaded photo as a Lumon Industries employee. Preserve the person’s exact facial identity... Depict a tight, controlled portrait framed through architectural confinement... Lighting should be cold, sterile fluorescent... Maintain a fully photorealistic look..."
 
     *** REFERENCE DESCRIPTION ***
-    If an image is provided, "reference_description" should capture purely visual cues not covered in the prompt (e.g. "Minimalist composition with heavy negative space on top, aspect ratio 2:3, grain texture"). If the prompt covers everything, leave this empty.
+    If an image is provided, "reference_description" should capture purely visual cues not covered in the prompt. 
+    ESSENTIAL: Describe how the title is mentioned in the original poster (placement, font style, color, weight, and hierarchy). 
+    Also include: "Minimalist composition with heavy negative space on top, aspect ratio 2:3, specific texture or film grain style". 
+    If the prompt covers everything, leave this empty.
     
     Input Name: "${name || 'See attached image'}"
     `;

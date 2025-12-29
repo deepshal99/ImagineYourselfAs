@@ -90,24 +90,6 @@ serve(async (req) => {
       console.log("Using reference description for style guidance");
     }
 
-    if (referenceImage) {
-      finalPrompt += ` CRITICAL: Use the attached SECOND image (the reference poster) as an absolute visual guide for the overall direction, composition, lighting, and style. The final result should feel like it belongs in the same world as the reference poster but features the person from the headshot.`;
-
-      // Update the text part with the new prompt
-      parts[0].text = finalPrompt;
-
-      try {
-        console.log("Fetching reference image for visual analysis by model:", referenceImage);
-        const resp = await fetch(referenceImage);
-        const blob = await resp.blob();
-        const buffer = await blob.arrayBuffer();
-        const base64 = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
-        parts.push({ inline_data: { mime_type: blob.type || 'image/jpeg', data: base64 } });
-      } catch (e) {
-        console.error("Failed to fetch reference image:", e);
-      }
-    }
-
     // Try primary model, fallback to standard if needed
     let model = "gemini-3-pro-image-preview";
     let genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -127,13 +109,19 @@ serve(async (req) => {
           parts: parts
         }],
         generationConfig: {
-          temperature: 1.0,
+          temperature: 0.9,
           responseModalities: ["IMAGE"],
           imageConfig: {
             aspectRatio: "1:1",
-            // imageSize: "2K"
+            imageSize: "1K"
           }
-        }
+        },
+        safetySettings: [
+          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
+        ]
       })
     });
 
