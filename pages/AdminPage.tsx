@@ -518,60 +518,74 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
                 />
               </div>
 
-              {/* Reference Image URL */}
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">Reference Image URL (Optional)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={referenceImage}
-                    onChange={(e) => setReferenceImage(e.target.value)}
-                    placeholder="https://... guiding image"
-                    className="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 text-sm"
-                  />
-                  <input
-                    type="file"
-                    id="ref-upload"
-                    onChange={handleReferenceUpload}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  <button
-                    onClick={() => document.getElementById('ref-upload')?.click()}
-                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 border border-zinc-700 rounded-xl text-xs flex items-center gap-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    Upload
-                  </button>
-                </div>
-                <p className="text-[10px] text-zinc-500 mt-1">This image guides Gemini on composition and direction.</p>
-              </div>
-
-              {/* Reference Description */}
-              {referenceImage && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-zinc-400">Reference Style Description</label>
+              {/* Reference Image */}
+              <div className="pt-4 border-t border-zinc-800/50">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-zinc-400">Reference Image (Visual Guide)</label>
+                  {referenceImage && (
                     <button
                       onClick={analyzeReference}
                       disabled={isAnalyzing}
-                      className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50"
+                      className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50 flex items-center gap-1"
                     >
-                      {isAnalyzing ? 'Analyzing...' : '🤖 Analyze Image Style'}
+                      {isAnalyzing ? (
+                        <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      AI Optimization
                     </button>
-                  </div>
-                  <textarea
-                    value={referenceDescription}
-                    onChange={(e) => setReferenceDescription(e.target.value)}
-                    placeholder="Visual description generated from the reference image..."
-                    rows={3}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 text-sm"
-                  />
-                  <p className="text-[10px] text-zinc-500 mt-1">Analyzing creates a text version of the style, saving image token costs on every generation.</p>
+                  )}
                 </div>
-              )}
+
+                {referenceImage ? (
+                  <div className="relative aspect-[2/1] bg-zinc-800 rounded-xl overflow-hidden border border-zinc-700 group">
+                    <img src={referenceImage} alt="Reference" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => setReferenceImage('')}
+                        className="p-2 bg-red-500/80 text-white rounded-lg hover:bg-red-500 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => document.getElementById('ref-upload-modal')?.click()}
+                        className="p-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
+                      >
+                        Change Image
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => document.getElementById('ref-upload-modal')?.click()}
+                    className="w-full py-8 border-2 border-dashed border-zinc-800 hover:border-zinc-700 rounded-2xl flex flex-col items-center justify-center gap-3 transition-colors group"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-zinc-700 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-zinc-500 font-medium">Upload Reference Poster</span>
+                  </button>
+                )}
+
+                <input
+                  type="file"
+                  id="ref-upload-modal"
+                  onChange={handleReferenceUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <p className="text-[10px] text-zinc-500 mt-2 italic px-1">
+                  Gemini will use this image to match lighting, composition, and overall vibe.
+                </p>
+              </div>
             </div>
           </div>
 
