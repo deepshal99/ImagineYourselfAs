@@ -27,29 +27,39 @@ serve(async (req) => {
     // Use Gemini to analyze the character/movie
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${apiKey}`;
 
-    let systemPrompt = `
-    You are an expert creative director for a movie poster AI app.
-    Your task is to analyze the input (name or reference image) and generate a persona profile.
-    
+    let systemPrompt = \`
+    You are an expert creative director for a premium movie poster AI app.
+    Your task is to analyze the input (name or reference image) and generate a persona profile that rigorously follows the "Official Key Art" style guide.
+
     Return ONLY a JSON object with this structure:
     {
       "name": "Corrected Official Name",
       "category": "Movie" | "Series" | "YouTube" | "Other",
       "prompt": "The detailed image generation prompt",
-      "reference_description": "A highly detailed visual description of the reference image (composition, lighting, style, key elements) - ONLY if image provided",
+      "reference_description": "", 
       "color": "Hex color code matching the vibe"
     }
 
-    PROMPT RULES:
-    The prompt must follow this strict format:
-    "[Universe/Style Name]. Signature elements: [Comma separated visual elements, costume details, background elements]. Lighting: [Lighting style]. Atmosphere: [Mood/Vibe]."
+    *** CRITICAL PROMPT ENGINEERING RULES ***
+    The "prompt" field MUST be structured EXACTLY as follows. Do not deviate.
     
-    If an image is provided, focus the "prompt" on the core character elements and the "reference_description" EXCLUSIVELY on the visual style/direction (composition, lighting, color palette).
+    Structure:
+    1. Opening: "Create an official [Network/Studio] [Show/Movie Name] poster image featuring the person in the uploaded photo as..."
+    2. Identity: "Preserve the person’s exact facial identity, gender, skin texture, hair detail, and realism, integrating them naturally as an original character."
+    3. Character Portrayal: Depict the expression, pose, and psychological state (e.g. "tense head-and-shoulders", "mid-scream", "restrained").
+    4. Visual Composition: Layout, framing, background elements (abstract or literal).
+    5. Lighting and Color: Specific palettes, lighting direction (e.g. "cold sterile fluorescent", "dominant yellow wash").
+    6. Styling: Costume and grooming details suited to the world.
+    7. Rendering Style: VALIDATION BLOCK. Must say: "Maintain a fully photorealistic look. Do not illustrate, stylize, or dramatize. No painterly effects. The final image should feel like official [Network] key art—[3 adjectives]."
+
+    *** EXAMPLE (Follow this tone exactly) ***
+    "Create an official Apple TV+ SEVERANCE poster image featuring the person in the uploaded photo as a Lumon Industries employee. Preserve the person’s exact facial identity... Depict a tight, controlled portrait framed through architectural confinement... Lighting should be cold, sterile fluorescent... Maintain a fully photorealistic look..."
+
+    *** REFERENCE DESCRIPTION ***
+    If an image is provided, "reference_description" should capture purely visual cues not covered in the prompt (e.g. "Minimalist composition with heavy negative space on top, aspect ratio 2:3, grain texture"). If the prompt covers everything, leave this empty.
     
-    The "reference_description" will be used to SUPPLEMENT the main prompt, not replace it.
-    
-    Input Name: "${name || 'See attached image'}"
-    `;
+    Input Name: "\${name || 'See attached image'}"
+    \`;
 
     const parts: any[] = [{ text: systemPrompt }];
 
@@ -75,7 +85,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Gemini API Error: ${errText}`);
+      throw new Error(`Gemini API Error: ${ errText } `);
     }
 
     const data = await response.json();
@@ -92,36 +102,36 @@ serve(async (req) => {
     } else {
       // Fallback: simple cleanup if braces aren't found (unlikely for JSON)
       console.warn("No braces found in response, attempting regex cleanup");
-      cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      cleanJson = text.replace(/```json / gi, '').replace(/```/g, '').trim();
     }
 
-    let result;
-    try {
-      result = JSON.parse(cleanJson);
-    } catch (e: any) {
-      console.error("JSON Parse Error. Raw text:", text);
-      console.error("Attempted Cleaned text:", cleanJson);
+let result;
+try {
+  result = JSON.parse(cleanJson);
+} catch (e: any) {
+  console.error("JSON Parse Error. Raw text:", text);
+  console.error("Attempted Cleaned text:", cleanJson);
 
-      // Final attempt: sometimes there are hidden characters or newlines messed up
-      try {
-        // aggressive regex to keep only json characters? No that breaks strings.
-        // Just return a friendly error.
-        throw new Error(`Failed to parse AI response: ${e.message}`);
-      } catch (_e2) {
-        throw new Error("Failed to parse AI response. Please try again.");
-      }
-    }
+  // Final attempt: sometimes there are hidden characters or newlines messed up
+  try {
+    // aggressive regex to keep only json characters? No that breaks strings.
+    // Just return a friendly error.
+    throw new Error(`Failed to parse AI response: ${e.message}`);
+  } catch (_e2) {
+    throw new Error("Failed to parse AI response. Please try again.");
+  }
+}
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
+return new Response(JSON.stringify(result), {
+  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  status: 200,
+});
 
   } catch (error) {
-    console.error("Function Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
-  }
+  console.error("Function Error:", error);
+  return new Response(JSON.stringify({ error: error.message }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status: 400,
+  });
+}
 });
