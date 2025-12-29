@@ -56,7 +56,7 @@ serve(async (req) => {
     // Step A: Face Description (if not cached)
     let faceDescription = cachedFaceDescription;
     if (!faceDescription) {
-      const visionResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${apiKey}`, {
+      const visionResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -109,7 +109,7 @@ serve(async (req) => {
     }
 
     // Try primary model, fallback to standard if needed
-    let model = "gemini-3-pro";
+    let model = "gemini-3-pro-image-preview";
     let genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     console.log(`Generating with config:`, {
       model,

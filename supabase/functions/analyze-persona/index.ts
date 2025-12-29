@@ -25,9 +25,9 @@ serve(async (req) => {
     }
 
     // Use Gemini to analyze the character/movie
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
 
-    let systemPrompt = \`
+    let systemPrompt = `
     You are an expert creative director for a premium movie poster AI app.
     Your task is to analyze the input (name or reference image) and generate a persona profile that rigorously follows the "Official Key Art" style guide.
 
@@ -58,8 +58,8 @@ serve(async (req) => {
     *** REFERENCE DESCRIPTION ***
     If an image is provided, "reference_description" should capture purely visual cues not covered in the prompt (e.g. "Minimalist composition with heavy negative space on top, aspect ratio 2:3, grain texture"). If the prompt covers everything, leave this empty.
     
-    Input Name: "\${name || 'See attached image'}"
-    \`;
+    Input Name: "${name || 'See attached image'}"
+    `;
 
     const parts: any[] = [{ text: systemPrompt }];
 
@@ -85,7 +85,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Gemini API Error: ${ errText } `);
+      throw new Error(`Gemini API Error: ${errText} `);
     }
 
     const data = await response.json();
@@ -102,36 +102,36 @@ serve(async (req) => {
     } else {
       // Fallback: simple cleanup if braces aren't found (unlikely for JSON)
       console.warn("No braces found in response, attempting regex cleanup");
-      cleanJson = text.replace(/```json / gi, '').replace(/```/g, '').trim();
+      cleanJson = text.replace(/```json /gi, '').replace(/```/g, '').trim();
     }
 
-let result;
-try {
-  result = JSON.parse(cleanJson);
-} catch (e: any) {
-  console.error("JSON Parse Error. Raw text:", text);
-  console.error("Attempted Cleaned text:", cleanJson);
+    let result;
+    try {
+      result = JSON.parse(cleanJson);
+    } catch (e: any) {
+      console.error("JSON Parse Error. Raw text:", text);
+      console.error("Attempted Cleaned text:", cleanJson);
 
-  // Final attempt: sometimes there are hidden characters or newlines messed up
-  try {
-    // aggressive regex to keep only json characters? No that breaks strings.
-    // Just return a friendly error.
-    throw new Error(`Failed to parse AI response: ${e.message}`);
-  } catch (_e2) {
-    throw new Error("Failed to parse AI response. Please try again.");
-  }
-}
+      // Final attempt: sometimes there are hidden characters or newlines messed up
+      try {
+        // aggressive regex to keep only json characters? No that breaks strings.
+        // Just return a friendly error.
+        throw new Error(`Failed to parse AI response: ${e.message}`);
+      } catch (_e2) {
+        throw new Error("Failed to parse AI response. Please try again.");
+      }
+    }
 
-return new Response(JSON.stringify(result), {
-  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  status: 200,
-});
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
 
   } catch (error) {
-  console.error("Function Error:", error);
-  return new Response(JSON.stringify({ error: error.message }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    status: 400,
-  });
-}
+    console.error("Function Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400,
+    });
+  }
 });
