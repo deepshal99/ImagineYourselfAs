@@ -950,9 +950,15 @@ const AdminPage: React.FC = () => {
     let failCount = 0;
 
     try {
+      console.log("Starting batch analysis. Total personas:", managedPersonas.length);
+      managedPersonas.forEach(p => console.log(`Persona ${p.name}: hasCover=${!!p.cover}, hasDesc=${!!p.reference_description}, DescLen=${p.reference_description?.length}`));
+
       toast.loading('Starting batch analysis (this may take a minute)...', { id: 'batch-toast' });
 
-      const personasToAnalyze = managedPersonas.filter(p => !p.reference_description && p.cover);
+      // Relaxed check: allow null, undefined, or empty string. AND MUST HAVE COVER.
+      const personasToAnalyze = managedPersonas.filter(p => (!p.reference_description || p.reference_description.trim() === '') && p.cover);
+
+      console.log("Personas to analyze:", personasToAnalyze.map(p => p.name));
 
       if (personasToAnalyze.length === 0) {
         toast.success("All personas already have style descriptions!", { id: 'batch-toast' });
