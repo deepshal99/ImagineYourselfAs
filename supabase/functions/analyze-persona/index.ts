@@ -25,7 +25,7 @@ serve(async (req) => {
     }
 
     // Use Gemini to analyze the character/movie
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
 
     let systemPrompt = `
     You are an expert creative director for a movie poster AI app.
@@ -44,7 +44,9 @@ serve(async (req) => {
     The prompt must follow this strict format:
     "[Universe/Style Name]. Signature elements: [Comma separated visual elements, costume details, background elements]. Lighting: [Lighting style]. Atmosphere: [Mood/Vibe]."
     
-    If an image is provided, focus the "prompt" and "reference_description" on reproducing THAT EXACT visual style.
+    If an image is provided, focus the "prompt" on the core character elements and the "reference_description" EXCLUSIVELY on the visual style/direction (composition, lighting, color palette).
+    
+    The "reference_description" will be used to SUPPLEMENT the main prompt, not replace it.
     
     Input Name: "${name || 'See attached image'}"
     `;

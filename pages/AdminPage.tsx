@@ -395,7 +395,6 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
 
       if (error) throw error;
 
-      if (data.prompt) setPrompt(data.prompt);
       if (data.reference_description) setReferenceDescription(data.reference_description);
       if (data.category) setCategory(data.category);
       if (data.name && !name) setName(data.name);
