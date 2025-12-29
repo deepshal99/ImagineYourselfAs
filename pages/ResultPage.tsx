@@ -49,8 +49,7 @@ const ResultPage: React.FC = () => {
         isUnlimited,
         // Face description caching
         cachedFaceDescription,
-        setCachedFaceDescription,
-        userReferenceImage
+        setCachedFaceDescription
     } = useImageContext();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -181,7 +180,7 @@ const ResultPage: React.FC = () => {
                 cachedFaceDescription, // Pass cached description if available
                 user?.user_metadata?.full_name || user?.user_metadata?.name,
                 selectedPersona.id, // Pass personaId for auto-saving
-                userReferenceImage || selectedPersona.reference_image, // Prioritize user-provided reference
+                selectedPersona.reference_image, // Pass reference_image if available
                 selectedPersona.reference_description // Pass reference_description if available
             );
 

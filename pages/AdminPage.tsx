@@ -708,15 +708,22 @@ const DraggablePersonaCard: React.FC<DraggablePersonaCardProps> = ({
 
       {/* Cover */}
       <div className="w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-zinc-800">
-        <img
-          src={persona.cover}
-          alt={persona.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            // (e.target as HTMLImageElement).src = '/placeholder.png'; // Optional: set to a placeholder
-            console.warn("Failed to load cover", persona.name);
-          }}
-        />
+        {persona.cover ? (
+          <img
+            src={persona.cover}
+            alt={persona.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              console.warn("Failed to load cover", persona.name);
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-zinc-700">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        )}
       </div>
 
       {/* Info */}
@@ -1583,12 +1590,18 @@ const AdminPage: React.FC = () => {
                   className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl overflow-hidden group"
                 >
                   <div className="aspect-[2/3] relative">
-                    <img
-                      src={gen.image_url}
-                      alt={gen.persona_name}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading="lazy"
-                    />
+                    {gen.image_url ? (
+                      <img
+                        src={gen.image_url}
+                        alt={gen.persona_name}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-zinc-800 text-zinc-600">
+                        No Image
+                      </div>
+                    )}
                   </div>
                   <div className="p-3">
                     <p className="text-white font-medium text-sm truncate">{gen.persona_name}</p>
@@ -1632,12 +1645,16 @@ const AdminPage: React.FC = () => {
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-zinc-500 text-sm w-6">#{index + 1}</span>
-                          {persona && (
+                          {persona && persona.cover ? (
                             <img
                               src={persona.cover}
                               alt={persona.name}
                               className="w-8 h-12 object-cover rounded"
                             />
+                          ) : (
+                            <div className="w-8 h-12 bg-zinc-700 flex items-center justify-center rounded text-[10px] text-zinc-500">
+                              No Pix
+                            </div>
                           )}
                           <div>
                             <p className="text-white text-sm font-medium">{stat.name}</p>
@@ -1662,11 +1679,17 @@ const AdminPage: React.FC = () => {
                   .filter(p => !personaStats.find(s => s.id === p.id))
                   .map(persona => (
                     <div key={persona.id} className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 rounded-lg">
-                      <img
-                        src={persona.cover}
-                        alt={persona.name}
-                        className="w-6 h-8 object-cover rounded"
-                      />
+                      {persona.cover ? (
+                        <img
+                          src={persona.cover}
+                          alt={persona.name}
+                          className="w-6 h-8 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-6 h-8 bg-zinc-700 flex items-center justify-center rounded text-[8px] text-zinc-600">
+                          N/A
+                        </div>
+                      )}
                       <span className="text-zinc-400 text-sm">{persona.name}</span>
                     </div>
                   ))

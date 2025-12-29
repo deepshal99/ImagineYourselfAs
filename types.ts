@@ -40,6 +40,4 @@ export interface ImageContextType {
   imageHash: string | null;
   showSuccessModal: boolean;
   setShowSuccessModal: (show: boolean) => void;
-  userReferenceImage: string | null;
-  setUserReferenceImage: (image: string | null) => void;
 }
