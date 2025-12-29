@@ -45,7 +45,7 @@ serve(async (req) => {
     creditDeducted = true; // Mark as deducted for potential refund
 
     // 5. Parse Request
-    const { base64Image, prompt, cachedFaceDescription, userName, personaId } = await req.json();
+    const { base64Image, prompt, cachedFaceDescription, userName, personaId, referenceImage, referenceDescription } = await req.json();
     if (!base64Image || !prompt) throw new Error("Missing required fields");
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -77,7 +77,34 @@ serve(async (req) => {
 
     // Step B: Image Generation
     // const starringText = userName ? ` Starring ${userName}.` : '';
-    const finalPrompt = `Movie poster style. ${prompt}. Use the attached reference image for the main character's face. The character should look exactly like the person in the image (Ethnicity: ${faceDescription}). High quality, cinematic lighting.`;
+    let finalPrompt = `Movie poster style. ${prompt}. Use the attached headshot image for the main character's face. The character should look exactly like the person in the image (Ethnicity: ${faceDescription}). High quality, cinematic lighting.`;
+
+    const parts: any[] = [
+      { text: finalPrompt },
+      { inline_data: { mime_type: 'image/jpeg', data: base64Image.split(',')[1] || base64Image } }
+    ];
+
+    if (referenceDescription) {
+      finalPrompt += ` CRITICAL STYLE DIRECTION: ${referenceDescription}. The final result must strictly follow this visual style, composition, and lighting while featuring the person from the headshot.`;
+      parts[0].text = finalPrompt;
+      // When we have a text description, we DON'T send the reference image to save costs
+      console.log("Using reference description for style guidance (saving image tokens)");
+    } else if (referenceImage) {
+      finalPrompt += ` CRITICAL: Use the attached SECOND image (the reference poster) as a guide for the overall direction, composition, lighting, and style. The final result should feel like it belongs in the same world as the reference poster but features the person from the headshot.`;
+      // Update the text part with the new prompt
+      parts[0].text = finalPrompt;
+
+      try {
+        console.log("Fetching reference image (no description available):", referenceImage);
+        const resp = await fetch(referenceImage);
+        const blob = await resp.blob();
+        const buffer = await blob.arrayBuffer();
+        const base64 = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+        parts.push({ inline_data: { mime_type: blob.type || 'image/jpeg', data: base64 } });
+      } catch (e) {
+        console.error("Failed to fetch reference image:", e);
+      }
+    }
 
     // Try primary model, fallback to standard if needed
     let model = "gemini-3-pro-image-preview"; // Or "imagen-3.0-generate-001"
@@ -85,7 +112,9 @@ serve(async (req) => {
     console.log(`Generating with config:`, {
       model,
       imageSize: base64Image.length,
-      hasPrompt: !!prompt
+      hasPrompt: !!prompt,
+      hasReference: !!referenceImage,
+      hasDescription: !!referenceDescription
     });
 
     let genResp = await fetch(genUrl, {
@@ -93,10 +122,7 @@ serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
-          parts: [
-            { text: finalPrompt },
-            { inline_data: { mime_type: 'image/jpeg', data: base64Image.split(',')[1] || base64Image } }
-          ]
+          parts: parts
         }],
         generationConfig: {
           temperature: 1.0,
@@ -115,8 +141,8 @@ serve(async (req) => {
 
     const genData = await genResp.json();
     let resultImage = null;
-    const parts = genData.candidates?.[0]?.content?.parts || [];
-    for (const part of parts) {
+    const responseParts = genData.candidates?.[0]?.content?.parts || [];
+    for (const part of responseParts) {
       if (part.inline_data) resultImage = `data:image/png;base64,${part.inline_data.data}`;
       else if (part.inlineData) resultImage = `data:image/png;base64,${part.inlineData.data}`;
     }

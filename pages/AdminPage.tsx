@@ -247,9 +247,12 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
   const [name, setName] = useState('');
   const [category, setCategory] = useState<PersonaCategory>('Movie');
   const [cover, setCover] = useState('');
+  const [referenceImage, setReferenceImage] = useState('');
+  const [referenceDescription, setReferenceDescription] = useState('');
   const [prompt, setPrompt] = useState('');
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   const [isGeneratingCover, setIsGeneratingCover] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [styleDescription, setStyleDescription] = useState('');
   const [showPromptHelper, setShowPromptHelper] = useState(false);
@@ -260,11 +263,15 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
       setName(persona.name);
       setCategory(persona.category);
       setCover(persona.cover);
+      setReferenceImage(persona.reference_image || '');
+      setReferenceDescription(persona.reference_description || '');
       setPrompt(persona.prompt);
     } else {
       setName('');
       setCategory('Movie');
       setCover('');
+      setReferenceImage('');
+      setReferenceDescription('');
       setPrompt('');
     }
     setStyleDescription('');
@@ -325,6 +332,35 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
     }
   };
 
+  const handleReferenceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingCover(true); // Reusing state for simplicity or can add separate one
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `references/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('creations')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('creations')
+        .getPublicUrl(fileName);
+
+      setReferenceImage(publicUrl);
+      toast.success('Reference image uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading reference image:', error);
+      toast.error('Failed to upload reference image');
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
   const handleSave = () => {
     if (!name || !prompt) {
       toast.error('Name and prompt are required');
@@ -336,11 +372,41 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
       name,
       category,
       cover: cover,
+      reference_image: referenceImage,
+      reference_description: referenceDescription,
       prompt,
       order: persona?.order || 999,
       isVisible: true,
     });
     onClose();
+  };
+
+  const analyzeReference = async () => {
+    if (!referenceImage) {
+      toast.error('Please upload a reference image first');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-persona', {
+        body: { name: name, imageUrl: referenceImage }
+      });
+
+      if (error) throw error;
+
+      if (data.prompt) setPrompt(data.prompt);
+      if (data.reference_description) setReferenceDescription(data.reference_description);
+      if (data.category) setCategory(data.category);
+      if (data.name && !name) setName(data.name);
+
+      toast.success('Reference analyzed successfully!');
+    } catch (error) {
+      console.error('Error analyzing reference:', error);
+      toast.error('Failed to analyze reference image');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -452,6 +518,61 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
                   className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 text-sm"
                 />
               </div>
+
+              {/* Reference Image URL */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">Reference Image URL (Optional)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={referenceImage}
+                    onChange={(e) => setReferenceImage(e.target.value)}
+                    placeholder="https://... guiding image"
+                    className="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 text-sm"
+                  />
+                  <input
+                    type="file"
+                    id="ref-upload"
+                    onChange={handleReferenceUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => document.getElementById('ref-upload')?.click()}
+                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 border border-zinc-700 rounded-xl text-xs flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Upload
+                  </button>
+                </div>
+                <p className="text-[10px] text-zinc-500 mt-1">This image guides Gemini on composition and direction.</p>
+              </div>
+
+              {/* Reference Description */}
+              {referenceImage && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-zinc-400">Reference Style Description</label>
+                    <button
+                      onClick={analyzeReference}
+                      disabled={isAnalyzing}
+                      className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50"
+                    >
+                      {isAnalyzing ? 'Analyzing...' : '🤖 Analyze Image Style'}
+                    </button>
+                  </div>
+                  <textarea
+                    value={referenceDescription}
+                    onChange={(e) => setReferenceDescription(e.target.value)}
+                    placeholder="Visual description generated from the reference image..."
+                    rows={3}
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 text-sm"
+                  />
+                  <p className="text-[10px] text-zinc-500 mt-1">Analyzing creates a text version of the style, saving image token costs on every generation.</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -714,7 +835,7 @@ const AdminPage: React.FC = () => {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isOrderDirty, setIsOrderDirty] = useState(false);
-  const [sortMethod, setSortMethod] = useState<'manual' | 'alpha' | 'popular' | 'newest'>('manual');
+  const [sortMethod, setSortMethod] = useState<'manual' | 'alpha' | 'popular' | 'newest' | 'random'>('manual');
 
   // Check if user is admin
   useEffect(() => {
@@ -816,6 +937,8 @@ const AdminPage: React.FC = () => {
             name: dbOverride.name,
             category: dbOverride.category as PersonaCategory,
             cover: dbOverride.cover,
+            reference_image: dbOverride.reference_image,
+            reference_description: dbOverride.reference_description,
             prompt: dbOverride.prompt,
             order: dbOverride.display_order ?? i,
             isVisible: dbOverride.is_visible !== false,
@@ -837,6 +960,8 @@ const AdminPage: React.FC = () => {
           name: p.name,
           category: p.category as PersonaCategory,
           cover: p.cover,
+          reference_image: p.reference_image,
+          reference_description: p.reference_description,
           prompt: p.prompt,
           order: p.display_order ?? (PERSONAS.length + managed.length),
           isVisible: p.is_visible !== false,
@@ -935,6 +1060,8 @@ const AdminPage: React.FC = () => {
           name: personaData.name,
           category: personaData.category,
           cover: personaData.cover,
+          reference_image: personaData.reference_image,
+          reference_description: personaData.reference_description,
           prompt: personaData.prompt,
           is_visible: personaData.isVisible ?? true,
           display_order: personaData.order ?? 999,
@@ -1088,7 +1215,7 @@ const AdminPage: React.FC = () => {
     setDragOverIndex(null);
   };
 
-  const handleSortChange = (method: 'manual' | 'alpha' | 'popular' | 'newest') => {
+  const handleSortChange = (method: 'manual' | 'alpha' | 'popular' | 'newest' | 'random') => {
     setSortMethod(method);
     if (method === 'manual') return;
 
@@ -1112,6 +1239,12 @@ const AdminPage: React.FC = () => {
         if (isCustomB) return 1;
         return 0;
       });
+    } else if (method === 'random') {
+      // Fisher-Yates shuffle
+      for (let i = sorted.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
+      }
     }
 
     // Re-index order
@@ -1599,7 +1732,8 @@ const AdminPage: React.FC = () => {
                   { id: 'manual', label: 'Manual' },
                   { id: 'alpha', label: 'A-Z' },
                   { id: 'popular', label: 'Popular' },
-                  { id: 'newest', label: 'Newest' }
+                  { id: 'newest', label: 'Newest' },
+                  { id: 'random', label: 'Random' }
                 ].map(method => (
                   <button
                     key={method.id}

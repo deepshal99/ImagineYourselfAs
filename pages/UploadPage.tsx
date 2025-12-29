@@ -6,6 +6,32 @@ import { useAuth } from '../context/AuthContext';
 import { Persona } from '../types';
 import Navigation from '../components/Navigation';
 
+// Generate a fallback placeholder for personas without covers
+const getFallbackCoverUrl = (personaId: string): string => {
+    // Use a data URI with a gradient placeholder
+    const colors = [
+        ['#1e3a5f', '#0f172a'], // blue
+        ['#3f1e5f', '#1a0f2a'], // purple
+        ['#1e5f3a', '#0a2f1a'], // green
+        ['#5f3a1e', '#2a1a0f'], // brown
+        ['#5f1e3a', '#2a0f1a'], // red
+    ];
+    const colorIndex = personaId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+    const [color1, color2] = colors[colorIndex];
+
+    // Create SVG placeholder
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300" viewBox="0 0 200 300">
+        <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:${color1}"/>
+            <stop offset="100%" style="stop-color:${color2}"/>
+        </linearGradient></defs>
+        <rect fill="url(#g)" width="200" height="300"/>
+        <text x="100" y="150" text-anchor="middle" fill="#ffffff40" font-size="40">🎬</text>
+    </svg>`;
+
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
 const AuthModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const { signInWithGoogle } = useAuth();
 
@@ -315,9 +341,9 @@ const PersonaCard: React.FC<{ persona: Persona; isSelected: boolean; onClick: ()
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        setImgSrc(persona.cover);
+        setImgSrc(persona.cover || getFallbackCoverUrl(persona.id));
         setIsLoaded(false);
-    }, [persona.cover]);
+    }, [persona.cover, persona.id]);
 
     return (
         <div

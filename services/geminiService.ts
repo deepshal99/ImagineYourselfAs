@@ -23,7 +23,9 @@ export const generatePersonaImage = async (
   prompt: string,
   cachedFaceDescription?: string | null,
   userName?: string | null,
-  personaId?: string | null
+  personaId?: string | null,
+  referenceImage?: string | null,
+  referenceDescription?: string | null
 ): Promise<GenerationResult> => {
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -41,6 +43,8 @@ export const generatePersonaImage = async (
       cachedFaceDescription: cachedFaceDescription || undefined,
       userName: userName || undefined,
       personaId: personaId || undefined,
+      referenceImage: referenceImage || undefined,
+      referenceDescription: referenceDescription || undefined,
     },
   });
 

@@ -6,6 +6,8 @@ export interface Persona {
   cover: string;
   prompt: string;
   category: PersonaCategory;
+  reference_image?: string;
+  reference_description?: string;
 }
 
 export interface SavedCreation {

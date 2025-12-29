@@ -179,7 +179,9 @@ const ResultPage: React.FC = () => {
                 selectedPersona.prompt,
                 cachedFaceDescription, // Pass cached description if available
                 user?.user_metadata?.full_name || user?.user_metadata?.name,
-                selectedPersona.id // Pass personaId for auto-saving
+                selectedPersona.id, // Pass personaId for auto-saving
+                selectedPersona.reference_image, // Pass reference_image if available
+                selectedPersona.reference_description // Pass reference_description if available
             );
 
             // Cache the face description for future generations with the same photo

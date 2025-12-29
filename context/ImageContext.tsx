@@ -369,15 +369,9 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
 
                     // 5. Sort by display_order
                     return visible.sort((a: any, b: any) => {
-                        // Use explicit order if available, otherwise default to 999
-                        // We treat -1 as "undefined/last" for safety
                         const orderA = (a.display_order !== undefined && a.display_order !== -1) ? a.display_order : 999;
                         const orderB = (b.display_order !== undefined && b.display_order !== -1) ? b.display_order : 999;
-
-                        // Primary sort: Order
                         if (orderA !== orderB) return orderA - orderB;
-
-                        // Secondary sort: Name (stability)
                         return (a.name || '').localeCompare(b.name || '');
                     });
                 });
