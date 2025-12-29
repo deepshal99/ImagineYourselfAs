@@ -247,7 +247,6 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
   const [name, setName] = useState('');
   const [category, setCategory] = useState<PersonaCategory>('Movie');
   const [cover, setCover] = useState('');
-  const [referenceImage, setReferenceImage] = useState('');
   const [referenceDescription, setReferenceDescription] = useState('');
   const [prompt, setPrompt] = useState('');
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
@@ -263,14 +262,12 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
       setName(persona.name);
       setCategory(persona.category);
       setCover(persona.cover);
-      setReferenceImage(persona.reference_image || '');
       setReferenceDescription(persona.reference_description || '');
       setPrompt(persona.prompt);
     } else {
       setName('');
       setCategory('Movie');
       setCover('');
-      setReferenceImage('');
       setReferenceDescription('');
       setPrompt('');
     }
@@ -323,6 +320,9 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
 
       setCover(publicUrl);
       toast.success('Cover uploaded successfully!');
+
+      // Auto-analyze style after upload
+      analyzeStyle(publicUrl);
     } catch (error) {
       console.error('Error uploading cover:', error);
       toast.error('Failed to upload cover');
@@ -332,34 +332,7 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
     }
   };
 
-  const handleReferenceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    setIsUploadingCover(true); // Reusing state for simplicity or can add separate one
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `references/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('creations')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('creations')
-        .getPublicUrl(fileName);
-
-      setReferenceImage(publicUrl);
-      toast.success('Reference image uploaded successfully!');
-    } catch (error) {
-      console.error('Error uploading reference image:', error);
-      toast.error('Failed to upload reference image');
-    } finally {
-      setIsUploadingCover(false);
-    }
-  };
 
   const handleSave = () => {
     if (!name || !prompt) {
@@ -372,7 +345,7 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
       name,
       category,
       cover: cover,
-      reference_image: referenceImage,
+      reference_image: cover, // Use cover as reference_image for backward compat
       reference_description: referenceDescription,
       prompt,
       order: persona?.order || 999,
@@ -381,16 +354,17 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
     onClose();
   };
 
-  const analyzeReference = async () => {
-    if (!referenceImage) {
-      toast.error('Please upload a reference image first');
+  const analyzeStyle = async (imageUrl?: string) => {
+    const targetImage = imageUrl || cover;
+    if (!targetImage) {
+      toast.error('Please upload a cover image first');
       return;
     }
 
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('analyze-persona', {
-        body: { name: name, imageUrl: referenceImage }
+        body: { name: name, imageUrl: targetImage }
       });
 
       if (error) throw error;
@@ -399,10 +373,10 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
       if (data.category) setCategory(data.category);
       if (data.name && !name) setName(data.name);
 
-      toast.success('Reference analyzed successfully!');
+      toast.success('Style analyzed successfully!');
     } catch (error) {
-      console.error('Error analyzing reference:', error);
-      toast.error('Failed to analyze reference image');
+      console.error('Error analyzing style:', error);
+      toast.error('Failed to analyze style');
     } finally {
       setIsAnalyzing(false);
     }
@@ -518,13 +492,13 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
                 />
               </div>
 
-              {/* Reference Image */}
+              {/* Reference Style Description */}
               <div className="pt-4 border-t border-zinc-800/50">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-medium text-zinc-400">Reference Image (Visual Guide)</label>
-                  {referenceImage && (
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-zinc-400">Style Analysis Results</label>
+                  {cover && (
                     <button
-                      onClick={analyzeReference}
+                      onClick={analyzeStyle}
                       disabled={isAnalyzing}
                       className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50 flex items-center gap-1"
                     >
@@ -535,56 +509,18 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
                           <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                         </svg>
                       )}
-                      AI Optimization
+                      Re-Analyze Style
                     </button>
                   )}
                 </div>
-
-                {referenceImage ? (
-                  <div className="relative aspect-[2/1] bg-zinc-800 rounded-xl overflow-hidden border border-zinc-700 group">
-                    <img src={referenceImage} alt="Reference" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => setReferenceImage('')}
-                        className="p-2 bg-red-500/80 text-white rounded-lg hover:bg-red-500 transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => document.getElementById('ref-upload-modal')?.click()}
-                        className="p-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
-                      >
-                        Change Image
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => document.getElementById('ref-upload-modal')?.click()}
-                    className="w-full py-8 border-2 border-dashed border-zinc-800 hover:border-zinc-700 rounded-2xl flex flex-col items-center justify-center gap-3 transition-colors group"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-zinc-700 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-sm text-zinc-500 font-medium">Upload Reference Poster</span>
-                  </button>
-                )}
-
-                <input
-                  type="file"
-                  id="ref-upload-modal"
-                  onChange={handleReferenceUpload}
-                  accept="image/*"
-                  className="hidden"
+                <textarea
+                  value={referenceDescription}
+                  onChange={(e) => setReferenceDescription(e.target.value)}
+                  placeholder="Visual style description (auto-generated from Cover Image)..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 text-sm"
                 />
-
-                <p className="text-[10px] text-zinc-500 mt-2 italic px-1">
-                  Gemini will use this image to match lighting, composition, and overall vibe.
-                </p>
+                <p className="text-[10px] text-zinc-500 mt-1">This description reinforces the visual style of the cover image during generation.</p>
               </div>
             </div>
           </div>
@@ -850,6 +786,7 @@ const AdminPage: React.FC = () => {
   const [isMagicAddOpen, setIsMagicAddOpen] = useState(false);
   const [magicName, setMagicName] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isBatchAnalyzing, setIsBatchAnalyzing] = useState(false);
 
   // Drag and drop states
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -1004,6 +941,75 @@ const AdminPage: React.FC = () => {
       setLoading(false);
     }
   }, [isAdmin]);
+
+  const handleBatchAnalyze = async () => {
+    if (!window.confirm('This will analyze all personas that have a cover image but no style description. Continue?')) return;
+
+    setIsBatchAnalyzing(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    try {
+      toast.loading('Starting batch analysis (this may take a minute)...', { id: 'batch-toast' });
+
+      const personasToAnalyze = managedPersonas.filter(p => !p.reference_description && p.cover);
+
+      if (personasToAnalyze.length === 0) {
+        toast.success("All personas already have style descriptions!", { id: 'batch-toast' });
+        return;
+      }
+
+      for (const p of personasToAnalyze) {
+        try {
+          // 1. Analyze
+          const { data, error } = await supabase.functions.invoke('analyze-persona', {
+            body: { name: p.name, imageUrl: p.cover }
+          });
+
+          if (error) throw error;
+
+          // 2. Update DB if description returned
+          if (data.reference_description) {
+            // Check if persona exists in DB (might be built-in without DB entry yet?)
+            // If ID is from built-in const, we can't update. But managedPersonas usually have DB IDs if they were fetched?
+            // Wait, built-in personas might not be in DB. We need to Upsert them?
+            // The 'admin-data' endpoint merges them.
+            // If p.id exists in 'discovered_personas', update it.
+            // If it's a built-in persona that hasn't been saved to DB yet, we might need to insert it?
+            // For now, let's assume we update only existing DB records.
+
+            const { error: updateError } = await supabase
+              .from('discovered_personas')
+              .update({
+                reference_description: data.reference_description,
+                reference_image: p.cover
+              })
+              .eq('id', p.id);
+
+            if (updateError) {
+              // If update failed (maybe row doesn't exist?), we might need to upsert?
+              // But simplified: just try update.
+              console.error("Update failed", updateError);
+              throw updateError;
+            }
+            successCount++;
+          }
+        } catch (e) {
+          console.error(`Failed to analyze ${p.name}:`, e);
+          failCount++;
+        }
+      }
+
+      await fetchData();
+      toast.success(`Batch complete: ${successCount} analyzed, ${failCount} failed`, { id: 'batch-toast' });
+
+    } catch (error) {
+      console.error("Batch analysis failed:", error);
+      toast.error("Batch analysis failed", { id: 'batch-toast' });
+    } finally {
+      setIsBatchAnalyzing(false);
+    }
+  };
 
   // Initial fetch when admin
   useEffect(() => {
@@ -1523,6 +1529,20 @@ const AdminPage: React.FC = () => {
                   Manage Users
                 </button>
                 <button
+                  onClick={handleBatchAnalyze}
+                  disabled={isBatchAnalyzing}
+                  className="px-4 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  {isBatchAnalyzing ? (
+                    <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                  )}
+                  {isBatchAnalyzing ? 'Analyzing All...' : 'Batch Analyze Styles'}
+                </button>
+                <button
                   onClick={() => setActiveTab('manage-personas')}
                   className="px-4 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 rounded-lg text-sm font-medium transition-colors"
                 >
@@ -1736,6 +1756,20 @@ const AdminPage: React.FC = () => {
                     Save Order
                   </button>
                 )}
+                <button
+                  onClick={handleBatchAnalyze}
+                  disabled={isBatchAnalyzing}
+                  className="px-4 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border border-purple-600/50 rounded-lg text-sm transition-colors flex items-center gap-2"
+                >
+                  {isBatchAnalyzing ? (
+                    <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                  )}
+                  {isBatchAnalyzing ? 'Analyzing...' : 'Batch Analyze Styles'}
+                </button>
                 <button
                   onClick={() => {
                     setEditingPersona(null);

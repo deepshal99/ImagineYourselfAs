@@ -180,7 +180,7 @@ const ResultPage: React.FC = () => {
                 cachedFaceDescription, // Pass cached description if available
                 user?.user_metadata?.full_name || user?.user_metadata?.name,
                 selectedPersona.id, // Pass personaId for auto-saving
-                selectedPersona.reference_image, // Pass reference_image if available
+                selectedPersona.cover, // Use cover image as reference
                 selectedPersona.reference_description // Pass reference_description if available
             );
 
