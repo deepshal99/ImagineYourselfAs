@@ -44,6 +44,7 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
     const [cachedFaceDescription, setCachedFaceDescription] = useState<string | null>(null);
     const [imageHash, setImageHash] = useState<string | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false);
     // Track when personas have finished loading (to prevent premature redirects on PersonaPage)
     const [personasLoaded, setPersonasLoaded] = useState(false);
 
@@ -576,6 +577,8 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
                 imageHash,
                 showSuccessModal,
                 setShowSuccessModal,
+                showCreditsExhaustedModal,
+                setShowCreditsExhaustedModal,
                 personasLoaded
             }}
         >

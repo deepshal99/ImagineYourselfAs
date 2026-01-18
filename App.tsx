@@ -9,6 +9,7 @@ import UploadPage from "./pages/UploadPage.tsx";
 import ResultPage from "./pages/ResultPage.tsx";
 import PersonaPage from "./pages/PersonaPage.tsx";
 import PaymentSuccessModal from "./components/PaymentSuccessModal.tsx";
+import CreditsExhaustedModal from "./components/CreditsExhaustedModal.tsx";
 import Footer from "./components/Footer.tsx";
 import { TermsPage, RefundPage, ContactPage, PrivacyPage } from "./pages/LegalPages.tsx";
 
@@ -29,6 +30,7 @@ const App: React.FC = () => {
         <ImageContextProvider>
           <Toaster position="top-center" theme="dark" richColors closeButton />
           <PaymentSuccessModal />
+          <CreditsExhaustedModal />
           <div className="min-h-screen w-full bg-[#09090b] text-zinc-100 selection:bg-white selection:text-black font-sans flex flex-col">
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
