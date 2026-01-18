@@ -347,11 +347,35 @@ const PersonaCard: React.FC<{ persona: Persona; isSelected: boolean; onClick: ()
         persona.cover || getFallbackCoverUrl(persona.id)
     );
     const [isLoaded, setIsLoaded] = useState(false);
+    const [linkCopied, setLinkCopied] = useState(false);
 
     useEffect(() => {
         setImgSrc(persona.cover || getFallbackCoverUrl(persona.id));
         setIsLoaded(false);
     }, [persona.cover, persona.id]);
+
+    // Handle share link copy
+    const handleShare = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Don't select the persona
+        const url = `${window.location.origin}/persona/${persona.id}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            setLinkCopied(true);
+            setTimeout(() => setLinkCopied(false), 2000);
+        } catch (err) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setLinkCopied(true);
+            setTimeout(() => setLinkCopied(false), 2000);
+        }
+    };
 
     return (
         <div
@@ -373,11 +397,6 @@ const PersonaCard: React.FC<{ persona: Persona; isSelected: boolean; onClick: ()
                     alt={persona.name}
                     onLoad={() => setIsLoaded(true)}
                     onError={(e) => {
-                        // Just hide the image or show a generic placeholder if needed
-                        // For now, we just let it be broken or handle it via CSS/state if desired
-                        // But user explicitly asked to REMOVE generation logic.
-                        // We can set it to a transparent pixel or a static placeholder if we had one.
-                        // Let's just log it and maybe set isLoaded to true so the spinner stops?
                         console.warn("Failed to load cover for", persona.name);
                         setIsLoaded(true);
                     }}
@@ -397,6 +416,28 @@ const PersonaCard: React.FC<{ persona: Persona; isSelected: boolean; onClick: ()
                     </h3>
                 </div>
 
+                {/* Share Button - appears on hover */}
+                <button
+                    onClick={handleShare}
+                    className={`absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center shadow-lg backdrop-blur-sm transition-all duration-300 z-20
+                        ${linkCopied
+                            ? 'bg-green-500 scale-110'
+                            : 'bg-black/60 hover:bg-black/80 opacity-0 group-hover:opacity-100 hover:scale-110'
+                        }`}
+                    title={linkCopied ? "Link copied!" : "Copy share link"}
+                >
+                    {linkCopied ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                        </svg>
+                    )}
+                </button>
+
+                {/* Selected checkmark */}
                 {isSelected && (
                     <div className="absolute top-3 right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg animate-bounce-short">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">

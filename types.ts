@@ -40,4 +40,5 @@ export interface ImageContextType {
   imageHash: string | null;
   showSuccessModal: boolean;
   setShowSuccessModal: (show: boolean) => void;
+  personasLoaded: boolean;
 }

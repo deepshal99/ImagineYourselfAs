@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 // Eager load critical pages for instant navigation
 import UploadPage from "./pages/UploadPage.tsx";
 import ResultPage from "./pages/ResultPage.tsx";
+import PersonaPage from "./pages/PersonaPage.tsx";
 import PaymentSuccessModal from "./components/PaymentSuccessModal.tsx";
 import Footer from "./components/Footer.tsx";
 import { TermsPage, RefundPage, ContactPage, PrivacyPage } from "./pages/LegalPages.tsx";
@@ -34,6 +35,7 @@ const App: React.FC = () => {
                 <Route path="/" element={<UploadPage />} />
                 <Route path="/result" element={<ResultPage />} />
                 <Route path="/library" element={<LibraryPage />} />
+                <Route path="/persona/:personaId" element={<PersonaPage />} />
                 <Route path="/admin" element={<AdminPage />} />
 
                 {/* Legal Pages */}

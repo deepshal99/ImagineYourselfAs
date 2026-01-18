@@ -44,6 +44,8 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
     const [cachedFaceDescription, setCachedFaceDescription] = useState<string | null>(null);
     const [imageHash, setImageHash] = useState<string | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    // Track when personas have finished loading (to prevent premature redirects on PersonaPage)
+    const [personasLoaded, setPersonasLoaded] = useState(false);
 
     // Persist credits and unlimited status
     useEffect(() => {
@@ -383,13 +385,17 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
 
     // Effect to load library based on auth state
     useEffect(() => {
-        if (user) {
-            loadSupabaseLibrary();
-        } else {
-            loadLocalLibrary();
-        }
-        // Always load discovered personas
-        loadDiscoveredPersonas();
+        const init = async () => {
+            if (user) {
+                loadSupabaseLibrary();
+            } else {
+                loadLocalLibrary();
+            }
+            // Always load discovered personas and mark as loaded when done
+            await loadDiscoveredPersonas();
+            setPersonasLoaded(true);
+        };
+        init();
     }, [user]);
 
     // CRITICAL FIX: Listen for guest state restoration after sign-in
@@ -569,7 +575,8 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
                 setCachedFaceDescription,
                 imageHash,
                 showSuccessModal,
-                setShowSuccessModal
+                setShowSuccessModal,
+                personasLoaded
             }}
         >
             {children}
