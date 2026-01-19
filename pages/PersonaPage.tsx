@@ -184,79 +184,18 @@ const PersonaPage: React.FC = () => {
 
             {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
-            <div className="flex-1 flex flex-col md:flex-row relative md:overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row-reverse relative md:overflow-hidden">
 
-                {/* LEFT PANE: Persona Cover */}
-                <div className="w-full md:w-1/2 flex-shrink-0 bg-zinc-900/30 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col md:h-full md:overflow-hidden">
-                    <div className="p-4 md:p-6 flex flex-col flex-1 items-center justify-center md:overflow-hidden">
+                {/* PANE 1 (DOM First): Upload Area & Header */}
+                {/* Mobile: Top | Desktop: Right (due to flex-row-reverse) */}
+                <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 border-b border-zinc-800/50 md:border-b-0 md:h-full md:overflow-hidden">
 
-                        {/* Mobile Header (Visible only on mobile) */}
-                        <div className="mb-5 text-center md:hidden animate-fade-in px-4">
-                            <h1 className="text-2xl font-semibold tracking-tight text-white mb-3 leading-snug">
-                                {headerTitle}
-                            </h1>
-                            <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto text-balance">
-                                {headerDescription}
-                            </p>
-                        </div>
-
-                        <div className="relative w-full max-w-sm md:max-h-full md:flex md:flex-col md:justify-center">
-                            {/* Persona Cover - constrained height */}
-                            <div className="relative aspect-[2/3] w-full max-h-[45vh] md:max-h-[80vh] rounded-2xl overflow-hidden shadow-2xl border border-zinc-700/50 mx-auto">
-                                <img
-                                    src={persona.cover}
-                                    alt={persona.name}
-                                    className="absolute inset-0 w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                                    <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-widest mb-1 block">
-                                        {persona.category}
-                                    </span>
-                                    {/* Hide name on mobile as it's in the header now? Or keep it as subtle overlay? Keep for consistency but maybe hide if header is redundant. I'll keep it. */}
-                                    <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
-                                        {persona.name}
-                                    </h1>
-                                </div>
-                            </div>
-
-                            {/* Share Button */}
-                            <button
-                                onClick={handleShare}
-                                className={`mt-3 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border transition-all duration-200 text-sm
-                                    ${linkCopied
-                                        ? 'bg-green-500/20 border-green-500/50 text-green-400'
-                                        : 'bg-zinc-800/50 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 hover:text-white'
-                                    }`}
-                            >
-                                {linkCopied ? (
-                                    <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                        </svg>
-                                        Link Copied!
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-                                        </svg>
-                                        Share This Poster
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* RIGHT PANE: Upload Area */}
-                <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 md:h-full md:overflow-hidden">
-                    {/* Desktop Header (Hidden on mobile) */}
-                    <div className="mb-5 text-center hidden md:block">
-                        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-3 leading-tight">
+                    {/* Unified Header (Visible on Mobile & Desktop) */}
+                    <div className="mb-6 md:mb-8 text-center px-4 animate-fade-in w-full max-w-md mx-auto">
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight text-white mb-2 md:mb-3 leading-snug md:leading-tight">
                             {headerTitle}
                         </h1>
-                        <p className="text-zinc-400 text-base leading-relaxed max-w-md mx-auto">
+                        <p className="text-zinc-400 text-sm md:text-base leading-relaxed text-balance">
                             {headerDescription}
                         </p>
                     </div>
@@ -268,7 +207,7 @@ const PersonaPage: React.FC = () => {
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
-                                className={`w-full aspect-[3/4] max-h-[55vh] rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden
+                                className={`w-full aspect-[3/4] max-h-[50vh] md:max-h-[55vh] rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden
                                     ${isDragging
                                         ? 'border-blue-500 bg-blue-500/10 scale-105 shadow-xl'
                                         : 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 hover:border-zinc-500'
@@ -289,13 +228,10 @@ const PersonaPage: React.FC = () => {
                                 <p className={`text-base font-medium ${isDragging ? 'text-blue-400' : 'text-zinc-200'}`}>
                                     {isDragging ? 'Drop Image Here' : 'Click or Drag to Upload'}
                                 </p>
-                                {/* Drag & Drop Placeholder using UploadBox component or similar logic if redundant? */}
-                                {/* Actually, looking at the code structure provided in grep, this text is likely inside the upload dropzone subtext */}
-                                {/* Based on grep line 292 */}
                                 <p className="text-xs text-zinc-500 mt-1">Start your creation</p>
                             </div>
                         ) : (
-                            <div className="relative w-full aspect-[3/4] max-h-[55vh] rounded-2xl overflow-hidden group shadow-2xl border border-zinc-700">
+                            <div className="relative w-full aspect-[3/4] max-h-[50vh] md:max-h-[55vh] rounded-2xl overflow-hidden group shadow-2xl border border-zinc-700">
                                 <img
                                     src={uploadedImage}
                                     alt="Uploaded"
@@ -353,6 +289,59 @@ const PersonaPage: React.FC = () => {
                                 </span>
                             )}
                         </button>
+                    </div>
+                </div>
+
+                {/* PANE 2 (DOM Second): Visuals (Poster & Share) */}
+                {/* Mobile: Bottom | Desktop: Left (due to flex-row-reverse) */}
+                <div className="w-full md:w-1/2 flex-shrink-0 bg-zinc-900/30 md:border-r border-zinc-800/50 flex flex-col md:h-full md:overflow-hidden">
+                    <div className="p-4 md:p-6 flex flex-col flex-1 items-center justify-center md:overflow-hidden">
+
+                        <div className="relative w-full max-w-sm md:max-h-full md:flex md:flex-col md:justify-center">
+                            {/* Persona Cover - constrained height */}
+                            <div className="relative aspect-[2/3] w-full max-h-[45vh] md:max-h-[80vh] rounded-2xl overflow-hidden shadow-2xl border border-zinc-700/50 mx-auto">
+                                <img
+                                    src={persona.cover}
+                                    alt={persona.name}
+                                    className="absolute inset-0 w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                                    <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-widest mb-1 block">
+                                        {persona.category}
+                                    </span>
+                                    <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                                        {persona.name}
+                                    </h1>
+                                </div>
+                            </div>
+
+                            {/* Share Button */}
+                            <button
+                                onClick={handleShare}
+                                className={`mt-3 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border transition-all duration-200 text-sm
+                                    ${linkCopied
+                                        ? 'bg-green-500/20 border-green-500/50 text-green-400'
+                                        : 'bg-zinc-800/50 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 hover:text-white'
+                                    }`}
+                            >
+                                {linkCopied ? (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                        Link Copied!
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                                        </svg>
+                                        Share This Poster
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
