@@ -183,6 +183,18 @@ const PersonaPage: React.FC = () => {
                 {/* LEFT PANE: Persona Cover */}
                 <div className="w-full md:w-1/2 flex-shrink-0 bg-zinc-900/30 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col md:h-full md:overflow-hidden">
                     <div className="p-4 md:p-6 flex flex-col flex-1 items-center justify-center md:overflow-hidden">
+
+                        {/* Mobile Header (Visible only on mobile) */}
+                        <div className="mb-6 text-center md:hidden animate-fade-in">
+                            <p className="text-zinc-500 font-medium text-[10px] tracking-widest uppercase mb-2">Initialize Transformation</p>
+                            <h1 className="text-3xl font-bold text-white mb-2">
+                                Become {persona.name}
+                            </h1>
+                            <p className="text-zinc-400 text-xs max-w-xs mx-auto">
+                                Upload a clear selfie to generate your unique AI poster instantly.
+                            </p>
+                        </div>
+
                         <div className="relative w-full max-w-sm md:max-h-full md:flex md:flex-col md:justify-center">
                             {/* Persona Cover - constrained height */}
                             <div className="relative aspect-[2/3] w-full max-h-[45vh] md:max-h-[80vh] rounded-2xl overflow-hidden shadow-2xl border border-zinc-700/50 mx-auto">
@@ -196,6 +208,7 @@ const PersonaPage: React.FC = () => {
                                     <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-widest mb-1 block">
                                         {persona.category}
                                     </span>
+                                    {/* Hide name on mobile as it's in the header now? Or keep it as subtle overlay? Keep for consistency but maybe hide if header is redundant. I'll keep it. */}
                                     <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
                                         {persona.name}
                                     </h1>
@@ -233,10 +246,11 @@ const PersonaPage: React.FC = () => {
 
                 {/* RIGHT PANE: Upload Area */}
                 <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 md:h-full md:overflow-hidden">
-                    <div className="mb-6 text-center">
-                        <p className="text-blue-500 font-medium text-xs tracking-wider uppercase mb-2">Initialize Transformation</p>
-                        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                            Become <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">{persona.name}</span>
+                    {/* Desktop Header (Hidden on mobile) */}
+                    <div className="mb-6 text-center hidden md:block">
+                        <p className="text-zinc-500 font-medium text-[10px] tracking-widest uppercase mb-2">Initialize Transformation</p>
+                        <h1 className="text-3xl font-bold text-white mb-2">
+                            Become {persona.name}
                         </h1>
                         <p className="text-zinc-400 text-sm max-w-xs mx-auto">
                             Upload a clear selfie to generate your unique AI poster instantly.
