@@ -176,7 +176,7 @@ const PersonaPage: React.FC = () => {
     // "Clean and short" approach
     const isValorant = persona.name.toLowerCase().includes('valorant');
     const headerTitle = isValorant ? "Become a Valorant Agent" : `Star in ${persona.name}`;
-    const headerDescription = "Instant AI transformation from your photo.";
+    const headerDescription = "Upload a clear selfie to generate your unique poster.";
 
     return (
         <div className="flex flex-col w-full bg-[#09090b] min-h-screen md:h-screen md:overflow-hidden">
