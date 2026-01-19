@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useImageContext } from '../context/ImageContext';
 import { useAuth } from '../context/AuthContext';
 import Navigation from '../components/Navigation';
+import PersonaCard from '../components/PersonaCard';
 
 // AuthModal component for sign-in prompt
 const AuthModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -196,16 +197,16 @@ const PersonaPage: React.FC = () => {
     const headerDescription = "Upload a clear selfie to generate your unique poster.";
 
     return (
-        <div className="flex flex-col w-full bg-[#09090b] min-h-screen md:h-screen md:overflow-hidden">
+        <div className="flex flex-col w-full bg-[#09090b] min-h-screen">
             <Navigation title={persona.name} />
 
             {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
-            <div className="flex-1 flex flex-col md:flex-row-reverse relative md:overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row-reverse relative md:min-h-screen">
 
                 {/* PANE 1 (DOM First): Upload Area & Header */}
                 {/* Mobile: Top | Desktop: Right (due to flex-row-reverse) */}
-                <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 border-b border-zinc-800/50 md:border-b-0 md:h-full md:overflow-hidden">
+                <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 border-b border-zinc-800/50 md:border-b-0">
 
                     {/* Unified Header (Visible on Mobile & Desktop) */}
                     <div className="mb-6 md:mb-8 text-center px-4 animate-fade-in w-full max-w-md mx-auto">
@@ -290,7 +291,7 @@ const PersonaPage: React.FC = () => {
                         <button
                             onClick={handleCreate}
                             disabled={isNavigating}
-                            className="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-base transition-all duration-200 bg-blue-600 text-white rounded-full hover:scale-105 hover:bg-blue-500 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] shadow-2xl ring-2 ring-white/10 disabled:opacity-80 disabled:scale-100 disabled:cursor-wait"
+                            className="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-base transition-all duration-200 bg-blue-600 text-white rounded-full hover:scale-105 hover:bg-blue-500 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] shadow-2xl ring-2 ring-white/10 disabled:opacity-80 disabled:scale-100 disabled:cursor-wait whitespace-nowrap"
                         >
                             {isNavigating ? (
                                 <span className="flex items-center gap-2">
@@ -311,8 +312,8 @@ const PersonaPage: React.FC = () => {
 
                 {/* PANE 2 (DOM Second): Visuals (Poster & Share) */}
                 {/* Mobile: Bottom | Desktop: Left (due to flex-row-reverse) */}
-                <div className="w-full md:w-1/2 flex-shrink-0 bg-zinc-900/30 md:border-r border-zinc-800/50 flex flex-col md:h-full md:overflow-hidden">
-                    <div className="p-4 md:p-6 flex flex-col flex-1 items-center justify-center md:overflow-hidden">
+                <div className="w-full md:w-1/2 flex-shrink-0 bg-zinc-900/30 md:border-r border-zinc-800/50 flex flex-col justify-center">
+                    <div className="p-4 md:p-6 flex flex-col items-center justify-center">
 
                         <div className="relative w-full max-w-sm md:max-h-full md:flex md:flex-col md:justify-center">
                             {/* Persona Cover - constrained height */}
@@ -360,6 +361,44 @@ const PersonaPage: React.FC = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Trending Personas Section */}
+            <div className="w-full bg-[#09090b] border-t border-zinc-800/50 py-12 px-6 md:px-12 z-10 relative">
+                <div className="max-w-7xl mx-auto">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white mb-2">Trending Now</h2>
+
+                        </div>
+                        <button
+                            onClick={() => navigate('/')}
+                            className="text-sm font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1 group"
+                        >
+                            View All <span className="group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+                        {personas
+                            .filter(p => p.id !== persona.id)
+                            .sort(() => 0.5 - Math.random())
+                            .slice(0, 5)
+                            .map(p => (
+                                <PersonaCard
+                                    key={p.id}
+                                    persona={p}
+                                    onClick={() => {
+                                        navigate(`/persona/${p.id}`);
+                                        window.scrollTo(0, 0);
+                                    }}
+                                />
+                            ))
+                        }
+                    </div>
+
+
                 </div>
             </div>
         </div>

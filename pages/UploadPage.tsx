@@ -5,32 +5,10 @@ import { useAuth } from '../context/AuthContext';
 
 import { Persona } from '../types';
 import Navigation from '../components/Navigation';
+import PersonaCard from '../components/PersonaCard';
 
 // Generate a fallback placeholder for personas without covers
-const getFallbackCoverUrl = (personaId: string): string => {
-    // Use a data URI with a gradient placeholder
-    const colors = [
-        ['#1e3a5f', '#0f172a'], // blue
-        ['#3f1e5f', '#1a0f2a'], // purple
-        ['#1e5f3a', '#0a2f1a'], // green
-        ['#5f3a1e', '#2a1a0f'], // brown
-        ['#5f1e3a', '#2a0f1a'], // red
-    ];
-    const colorIndex = personaId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
-    const [color1, color2] = colors[colorIndex];
 
-    // Create SVG placeholder
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300" viewBox="0 0 200 300">
-        <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:${color1}"/>
-            <stop offset="100%" style="stop-color:${color2}"/>
-        </linearGradient></defs>
-        <rect fill="url(#g)" width="200" height="300"/>
-        <text x="100" y="150" text-anchor="middle" fill="#ffffff40" font-size="40">🎬</text>
-    </svg>`;
-
-    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-};
 
 const AuthModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const { signInWithGoogle } = useAuth();
@@ -317,7 +295,7 @@ const UploadPage: React.FC = () => {
                     <button
                         onClick={handleImagine}
                         disabled={isNavigating}
-                        className="group relative inline-flex items-center justify-center px-10 py-4 font-bold text-lg transition-all duration-200 bg-blue-600 text-white rounded-full hover:scale-105 hover:bg-blue-500 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] shadow-2xl ring-2 ring-white/10 disabled:opacity-80 disabled:scale-100 disabled:cursor-wait"
+                        className="group relative inline-flex items-center justify-center px-10 py-4 font-bold text-lg transition-all duration-200 bg-blue-600 text-white rounded-full hover:scale-105 hover:bg-blue-500 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] shadow-2xl ring-2 ring-white/10 disabled:opacity-80 disabled:scale-100 disabled:cursor-wait whitespace-nowrap"
                     >
                         {isNavigating ? (
                             <span className="flex items-center gap-3">
@@ -341,114 +319,6 @@ const UploadPage: React.FC = () => {
     );
 };
 
-const PersonaCard: React.FC<{ persona: Persona; isSelected: boolean; onClick: () => void }> = ({ persona, isSelected, onClick }) => {
-    // Use gradient fallback as default to avoid 404 on deleted static covers
-    // Database covers will load via onLoad, static covers are gone
-    const [imgSrc, setImgSrc] = useState<string>(
-        persona.cover || getFallbackCoverUrl(persona.id)
-    );
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [linkCopied, setLinkCopied] = useState(false);
 
-    useEffect(() => {
-        setImgSrc(persona.cover || getFallbackCoverUrl(persona.id));
-        setIsLoaded(false);
-    }, [persona.cover, persona.id]);
-
-    // Handle share link copy
-    const handleShare = async (e: React.MouseEvent) => {
-        e.stopPropagation(); // Don't select the persona
-        const url = `${window.location.origin}/persona/${persona.id}`;
-        try {
-            await navigator.clipboard.writeText(url);
-            setLinkCopied(true);
-            setTimeout(() => setLinkCopied(false), 2000);
-        } catch (err) {
-            // Fallback for older browsers
-            const textArea = document.createElement('textarea');
-            textArea.value = url;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-9999px';
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            setLinkCopied(true);
-            setTimeout(() => setLinkCopied(false), 2000);
-        }
-    };
-
-    return (
-        <div
-            onClick={onClick}
-            className={`group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-300 bg-zinc-900
-              ${isSelected
-                    ? 'ring-4 ring-blue-500 shadow-2xl shadow-blue-500/20 scale-[1.02] z-10'
-                    : 'hover:ring-1 hover:ring-zinc-600 hover:scale-[1.02] hover:shadow-xl opacity-85 hover:opacity-100'
-                }`}
-        >
-            <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-800">
-                {/* Improved Skeleton */}
-                <div className={`absolute inset-0 bg-zinc-800 animate-pulse flex items-center justify-center transition-opacity duration-500 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}>
-                    <div className="w-8 h-8 border-2 border-zinc-700 border-t-zinc-500 rounded-full animate-spin"></div>
-                </div>
-
-                <img
-                    src={imgSrc}
-                    alt={persona.name}
-                    onLoad={() => setIsLoaded(true)}
-                    onError={(e) => {
-                        console.warn("Failed to load cover for", persona.name);
-                        setIsLoaded(true);
-                    }}
-                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-in-out
-                        ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'} 
-                        group-hover:scale-110 saturate-[0.8] group-hover:saturate-100`}
-                    loading="lazy"
-                    decoding="async"
-                />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent flex flex-col justify-end p-4">
-                    <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-widest mb-1 opacity-100">
-                        {persona.category}
-                    </span>
-                    <h3 className="text-sm font-bold text-white leading-tight shadow-sm">
-                        {persona.name}
-                    </h3>
-                </div>
-
-                {/* Share Button - appears on hover */}
-                <button
-                    onClick={handleShare}
-                    className={`absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center shadow-lg backdrop-blur-sm transition-all duration-300 z-20
-                        ${linkCopied
-                            ? 'bg-green-500 scale-110'
-                            : 'bg-black/60 hover:bg-black/80 opacity-0 group-hover:opacity-100 hover:scale-110'
-                        }`}
-                    title={linkCopied ? "Link copied!" : "Copy share link"}
-                >
-                    {linkCopied ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-                        </svg>
-                    )}
-                </button>
-
-                {/* Selected checkmark */}
-                {isSelected && (
-                    <div className="absolute top-3 right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg animate-bounce-short">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
 
 export default UploadPage;
