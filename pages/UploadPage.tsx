@@ -208,7 +208,7 @@ const UploadPage: React.FC = () => {
                                     <p className={`text-lg font-medium ${isDragging ? 'text-blue-400' : 'text-zinc-200'}`}>
                                         {isDragging ? 'Drop Image Here' : 'Click or Drag to Upload'}
                                     </p>
-                                    <p className="text-xs text-zinc-500 mt-2">Start your cinematic transformation</p>
+                                    <p className="text-xs text-zinc-500 mt-2">Create your cinematic poster</p>
                                 </div>
                             ) : (
                                 <div className="relative w-full aspect-[3/4] md:aspect-[3/4] max-w-[350px] md:max-w-full rounded-2xl overflow-hidden group shadow-2xl border border-zinc-700">

@@ -289,7 +289,10 @@ const PersonaPage: React.FC = () => {
                                 <p className={`text-base font-medium ${isDragging ? 'text-blue-400' : 'text-zinc-200'}`}>
                                     {isDragging ? 'Drop Image Here' : 'Click or Drag to Upload'}
                                 </p>
-                                <p className="text-xs text-zinc-500 mt-1">Start your transformation</p>
+                                {/* Drag & Drop Placeholder using UploadBox component or similar logic if redundant? */}
+                                {/* Actually, looking at the code structure provided in grep, this text is likely inside the upload dropzone subtext */}
+                                {/* Based on grep line 292 */}
+                                <p className="text-xs text-zinc-500 mt-1">Start your creation</p>
                             </div>
                         ) : (
                             <div className="relative w-full aspect-[3/4] max-h-[55vh] rounded-2xl overflow-hidden group shadow-2xl border border-zinc-700">
