@@ -173,9 +173,10 @@ const PersonaPage: React.FC = () => {
     }
 
     // Dynamic Header Logic
+    // "Clean and short" approach
     const isValorant = persona.name.toLowerCase().includes('valorant');
-    const headerTitle = isValorant ? "Imagine yourself as a new Valorant Agent" : `Become ${persona.name}`;
-    const headerDescription = "Upload a clear selfie to generate your unique poster instantly.";
+    const headerTitle = isValorant ? "Become a Valorant Agent" : `Star in ${persona.name}`;
+    const headerDescription = "Instant AI transformation from your photo.";
 
     return (
         <div className="flex flex-col w-full bg-[#09090b] min-h-screen md:h-screen md:overflow-hidden">
@@ -190,7 +191,7 @@ const PersonaPage: React.FC = () => {
                     <div className="p-4 md:p-6 flex flex-col flex-1 items-center justify-center md:overflow-hidden">
 
                         {/* Mobile Header (Visible only on mobile) */}
-                        <div className="mb-8 text-center md:hidden animate-fade-in px-4">
+                        <div className="mb-5 text-center md:hidden animate-fade-in px-4">
                             <h1 className="text-2xl font-semibold tracking-tight text-white mb-3 leading-snug">
                                 {headerTitle}
                             </h1>
@@ -251,7 +252,7 @@ const PersonaPage: React.FC = () => {
                 {/* RIGHT PANE: Upload Area */}
                 <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 md:h-full md:overflow-hidden">
                     {/* Desktop Header (Hidden on mobile) */}
-                    <div className="mb-8 text-center hidden md:block">
+                    <div className="mb-5 text-center hidden md:block">
                         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-3 leading-tight">
                             {headerTitle}
                         </h1>
