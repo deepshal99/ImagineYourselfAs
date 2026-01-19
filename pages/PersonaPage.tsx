@@ -91,6 +91,23 @@ const PersonaPage: React.FC = () => {
         }
     }, [persona, personasLoaded, navigate]);
 
+    // Listen for state restoration (e.g. after login)
+    useEffect(() => {
+        const handleRestore = (e: CustomEvent) => {
+            const { uploadedImage: restoredImage, personaId: restoredId } = e.detail;
+            // Only restore if it matches the current page's persona
+            if (restoredId === personaId && restoredImage) {
+                setUploadedImage(restoredImage);
+                // Optional: Trigger creation immediately or just show the state?
+                // For now, let's just restore the state so they see their image.
+                // If we want auto-create, we'd need to set a flag or call handleCreate (but handleCreate needs internal state)
+            }
+        };
+
+        window.addEventListener('restore-generation-state', handleRestore as EventListener);
+        return () => window.removeEventListener('restore-generation-state', handleRestore as EventListener);
+    }, [personaId, setUploadedImage]);
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {

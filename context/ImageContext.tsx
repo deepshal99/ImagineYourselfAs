@@ -414,7 +414,11 @@ export const ImageContextProvider = ({ children }: { children: any }) => {
             if (persona) {
                 setSelectedPersona(persona);
                 setGeneratedImage(null);
-                // Don't auto-navigate - user is already on upload page with state restored
+                // Auto-navigate to the persona page if we're not already there
+                const targetPath = `/p/${persona.id}`;
+                if (window.location.pathname !== targetPath) {
+                    navigate(targetPath);
+                }
             }
         };
 
