@@ -172,6 +172,11 @@ const PersonaPage: React.FC = () => {
         return null;
     }
 
+    // Dynamic Header Logic
+    const isValorant = persona.name.toLowerCase().includes('valorant');
+    const headerTitle = isValorant ? "Imagine yourself as a new Valorant Agent" : `Become ${persona.name}`;
+    const headerDescription = "Upload a clear selfie to generate your unique poster instantly.";
+
     return (
         <div className="flex flex-col w-full bg-[#09090b] min-h-screen md:h-screen md:overflow-hidden">
             <Navigation title={persona.name} />
@@ -186,12 +191,11 @@ const PersonaPage: React.FC = () => {
 
                         {/* Mobile Header (Visible only on mobile) */}
                         <div className="mb-6 text-center md:hidden animate-fade-in">
-                            <p className="text-zinc-500 font-medium text-[10px] tracking-widest uppercase mb-2">Initialize Transformation</p>
                             <h1 className="text-3xl font-bold text-white mb-2">
-                                Become {persona.name}
+                                {headerTitle}
                             </h1>
                             <p className="text-zinc-400 text-xs max-w-xs mx-auto">
-                                Upload a clear selfie to generate your unique AI poster instantly.
+                                {headerDescription}
                             </p>
                         </div>
 
@@ -248,12 +252,11 @@ const PersonaPage: React.FC = () => {
                 <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 md:h-full md:overflow-hidden">
                     {/* Desktop Header (Hidden on mobile) */}
                     <div className="mb-6 text-center hidden md:block">
-                        <p className="text-zinc-500 font-medium text-[10px] tracking-widest uppercase mb-2">Initialize Transformation</p>
                         <h1 className="text-3xl font-bold text-white mb-2">
-                            Become {persona.name}
+                            {headerTitle}
                         </h1>
                         <p className="text-zinc-400 text-sm max-w-xs mx-auto">
-                            Upload a clear selfie to generate your unique AI poster instantly.
+                            {headerDescription}
                         </p>
                     </div>
 
