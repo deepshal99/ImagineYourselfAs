@@ -190,11 +190,11 @@ const PersonaPage: React.FC = () => {
                     <div className="p-4 md:p-6 flex flex-col flex-1 items-center justify-center md:overflow-hidden">
 
                         {/* Mobile Header (Visible only on mobile) */}
-                        <div className="mb-6 text-center md:hidden animate-fade-in">
-                            <h1 className="text-3xl font-bold text-white mb-2">
+                        <div className="mb-8 text-center md:hidden animate-fade-in px-4">
+                            <h1 className="text-2xl font-semibold tracking-tight text-white mb-3 leading-snug">
                                 {headerTitle}
                             </h1>
-                            <p className="text-zinc-400 text-xs max-w-xs mx-auto">
+                            <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto text-balance">
                                 {headerDescription}
                             </p>
                         </div>
@@ -251,11 +251,11 @@ const PersonaPage: React.FC = () => {
                 {/* RIGHT PANE: Upload Area */}
                 <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 md:h-full md:overflow-hidden">
                     {/* Desktop Header (Hidden on mobile) */}
-                    <div className="mb-6 text-center hidden md:block">
-                        <h1 className="text-3xl font-bold text-white mb-2">
+                    <div className="mb-8 text-center hidden md:block">
+                        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-3 leading-tight">
                             {headerTitle}
                         </h1>
-                        <p className="text-zinc-400 text-sm max-w-xs mx-auto">
+                        <p className="text-zinc-400 text-base leading-relaxed max-w-md mx-auto">
                             {headerDescription}
                         </p>
                     </div>
