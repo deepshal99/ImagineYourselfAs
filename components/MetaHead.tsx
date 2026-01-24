@@ -8,8 +8,8 @@ interface MetaHeadProps {
 }
 
 const MetaHead: React.FC<MetaHeadProps> = ({
-    title = "PosterMe | Star in Your Own Movie",
-    description = "Transform your photo into a cinematic movie poster instantly. Become the star of Batman, Dune, Barbie, and more with AI.",
+    title = "PosterMe - Cast Yourself in Blockbuster Movies with AI",
+    description = "Instant AI casting. Upload a selfie and become the star of Dune, Batman, Barbie, and more. No design skills needed.",
     image = "/personas/movie_batman.webp", // Default to batman if not provided
     url = typeof window !== 'undefined' ? window.location.href : 'https://posterme.app/'
 }) => {

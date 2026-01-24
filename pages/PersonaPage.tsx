@@ -200,8 +200,8 @@ const PersonaPage: React.FC = () => {
     return (
         <div className="flex flex-col w-full bg-[#09090b] min-h-screen">
             <MetaHead
-                title={`Star in ${persona.name} | PosterMe`}
-                description={`Transform your photo into a cinematic movie poster for ${persona.name} instantly. Become the star with AI.`}
+                title={`${persona.name} Movie Poster - Starring You | PosterMe`}
+                description={`See yourself cast as ${persona.name}. Create this official-style movie poster instantly with PosterMe AI.`}
                 image={persona.cover}
                 url={`https://posterme.app/persona/${persona.id}`}
             />
