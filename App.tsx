@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ImageContextProvider } from "./context/ImageContext.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { Toaster } from 'sonner';
+import { Agentation } from "agentation";
 
 // Eager load critical pages for instant navigation
 import UploadPage from "./pages/UploadPage.tsx";
@@ -31,6 +32,7 @@ const App: React.FC = () => {
           <Toaster position="top-center" theme="dark" richColors closeButton />
           <PaymentSuccessModal />
           <CreditsExhaustedModal />
+          {process.env.NODE_ENV === "development" && <Agentation />}
           <div className="min-h-screen w-full bg-[#09090b] text-zinc-100 selection:bg-white selection:text-black font-sans flex flex-col">
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>

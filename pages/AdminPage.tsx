@@ -357,8 +357,18 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
       return;
     }
 
+    // Generate semantic ID from category and name if no ID exists
+    const generateSemanticId = () => {
+      const prefix = category.toLowerCase();
+      const slug = name.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '') // Remove special chars
+        .replace(/\s+/g, '_') // Replace spaces with underscores
+        .substring(0, 30); // Limit length
+      return `${prefix}_${slug}`;
+    };
+
     onSave({
-      id: persona?.id || `custom_${Date.now()}`,
+      id: persona?.id || generateSemanticId(),
       name,
       category,
       cover: cover,
@@ -1286,7 +1296,17 @@ const AdminPage: React.FC = () => {
   // Persona management actions
   const handleSavePersona = async (personaData: Partial<ManagedPersona> & { id?: string }) => {
     try {
-      const personaId = personaData.id || `custom_${Date.now()}`;
+      // Generate semantic ID if not provided
+      const generateSemanticId = () => {
+        const prefix = (personaData.category || 'other').toLowerCase();
+        const slug = (personaData.name || 'persona').toLowerCase()
+          .replace(/[^a-z0-9\s]/g, '')
+          .replace(/\s+/g, '_')
+          .substring(0, 30);
+        return `${prefix}_${slug}`;
+      };
+
+      const personaId = personaData.id || generateSemanticId();
 
       // Always upsert to database (handles both new and edited personas, including built-ins)
       const { error } = await supabase
