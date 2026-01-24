@@ -111,11 +111,15 @@ const StatCard: React.FC<{
 
 const UserRow: React.FC<{
   user: UserData;
+  generations: GenerationData[];
   onAddCredits: (userId: string, amount: number) => void;
   onToggleUnlimited: (userId: string, currentStatus: boolean) => void;
-}> = ({ user, onAddCredits, onToggleUnlimited }) => {
+  onDeleteGeneration: (id: string, userId: string) => void;
+}> = ({ user, generations, onAddCredits, onToggleUnlimited, onDeleteGeneration }) => {
   const [creditAmount, setCreditAmount] = useState(5);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const userGenerations = generations.filter(g => g.user_id === user.id);
 
   return (
     <div className="border-b border-zinc-800/50 last:border-0">
@@ -158,8 +162,9 @@ const UserRow: React.FC<{
       </div>
 
       {isExpanded && (
-        <div className="px-4 pb-4 bg-zinc-800/20">
-          <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-zinc-800/50">
+        <div className="px-4 pb-6 bg-zinc-800/20">
+          {/* Credits Actions */}
+          <div className="flex flex-wrap items-center gap-4 py-4 border-t border-zinc-800/50">
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -199,6 +204,18 @@ const UserRow: React.FC<{
               User ID: {user.id.substring(0, 8)}...
             </span>
           </div>
+
+          {/* User's Generations */}
+          {userGenerations.length > 0 && (
+            <div className="mt-2">
+              <h4 className="text-zinc-400 text-sm font-bold mb-3">Recent Generations</h4>
+              <GenerationsTable
+                generations={userGenerations}
+                onDelete={onDeleteGeneration}
+                compact={true}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -596,6 +613,193 @@ const PersonaEditorModal: React.FC<PersonaEditorProps> = ({ persona, isOpen, onC
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// GENERATION VIEW MODAL
+// ============================================================================
+
+const GenerationViewModal: React.FC<{
+  generation: GenerationData | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onDelete: (id: string, userId: string) => void;
+}> = ({ generation, isOpen, onClose, onDelete }) => {
+  if (!isOpen || !generation) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center" onClick={e => e.stopPropagation()}>
+        <img
+          src={generation.image_url}
+          alt={generation.persona_name}
+          className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+        />
+        <div className="absolute top-4 right-4 flex gap-2">
+          <button
+            onClick={() => {
+              const a = document.createElement('a');
+              a.href = generation.image_url;
+              a.download = `posterme-${generation.persona_name}-${generation.id}.png`;
+              a.target = '_blank';
+              a.click();
+            }}
+            className="p-3 bg-zinc-900/80 hover:bg-zinc-800 text-white rounded-full transition-colors backdrop-blur-md"
+            title="Download"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </button>
+          <button
+            onClick={onClose}
+            className="p-3 bg-zinc-900/80 hover:bg-zinc-800 text-white rounded-full transition-colors backdrop-blur-md"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="mt-4 flex items-center gap-4 bg-zinc-900/80 backdrop-blur-md px-6 py-3 rounded-full border border-zinc-800">
+          <div className="text-white text-sm">
+            <span className="font-bold">{generation.persona_name}</span> • <span className="text-zinc-400">{new Date(generation.created_at).toLocaleString()}</span>
+          </div>
+          <div className="h-4 w-px bg-zinc-700" />
+          <button
+            onClick={() => {
+              if (confirm('Are you sure you want to delete this generation?')) {
+                onDelete(generation.id, generation.user_id);
+                onClose();
+              }
+            }}
+            className="text-red-400 hover:text-red-300 text-sm font-medium flex items-center gap-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// GENERATIONS TABLE
+// ============================================================================
+
+const GenerationsTable: React.FC<{
+  generations: GenerationData[];
+  onDelete: (id: string, userId: string) => void;
+  compact?: boolean;
+}> = ({ generations, onDelete, compact = false }) => {
+  const [sort, setSort] = useState<'newest' | 'oldest' | 'persona'>('newest');
+  const [filter, setFilter] = useState('');
+  const [viewingGen, setViewingGen] = useState<GenerationData | null>(null);
+
+  const filtered = generations
+    .filter(g =>
+      g.persona_name.toLowerCase().includes(filter.toLowerCase()) ||
+      g.user_email.toLowerCase().includes(filter.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sort === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sort === 'oldest') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (sort === 'persona') return a.persona_name.localeCompare(b.persona_name);
+      return 0;
+    });
+
+  return (
+    <div className="space-y-4">
+      {/* Controls */}
+      {!compact && (
+        <div className="flex flex-col sm:flex-row gap-4 justify-between bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-zinc-400">Sort:</span>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as any)}
+              className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="persona">Persona Name</option>
+            </select>
+          </div>
+          <div className="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Filter by user or persona..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="pl-9 pr-4 py-1.5 bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg focus:outline-none focus:border-blue-500 w-full sm:w-64"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Grid */}
+      <div className={`grid grid-cols-2 md:grid-cols-3 ${compact ? 'lg:grid-cols-4' : 'lg:grid-cols-4 xl:grid-cols-5'} gap-4`}>
+        {filtered.slice(0, compact ? 8 : 100).map((gen) => (
+          <div key={gen.id} className="group relative aspect-[2/3] bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700/50 hover:border-zinc-500 transition-colors">
+            <img
+              src={gen.image_url}
+              alt={gen.persona_name}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+              <p className="text-white text-xs font-bold truncate">{gen.persona_name}</p>
+              {!compact && <p className="text-zinc-400 text-[10px] truncate">{gen.user_email}</p>}
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setViewingGen(gen)}
+                  className="flex-1 py-1 bg-white/10 hover:bg-white/20 text-white text-[10px] rounded backdrop-blur-sm transition-colors"
+                >
+                  View
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm('Delete this image?')) onDelete(gen.id, gen.user_id);
+                  }}
+                  className="p-1 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded backdrop-blur-sm transition-colors"
+                  title="Delete"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-zinc-500 text-sm">No generations found</p>
+        </div>
+      )}
+
+      {compact && filtered.length > 8 && (
+        <div className="text-center pt-2">
+          <p className="text-zinc-500 text-xs italic">And {filtered.length - 8} more...</p>
+        </div>
+      )}
+
+      {/* View Modal */}
+      <GenerationViewModal
+        generation={viewingGen}
+        isOpen={!!viewingGen}
+        onClose={() => setViewingGen(null)}
+        onDelete={onDelete}
+      />
     </div>
   );
 };
@@ -1368,6 +1572,27 @@ const AdminPage: React.FC = () => {
     }
   };
 
+
+  const handleDeleteGeneration = async (id: string, userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('creations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Generation deleted');
+      // Optimistic update
+      setGenerations(prev => prev.filter(g => g.id !== id));
+      // Also update users stats optimistic? Or just fetch data
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting generation:', error);
+      toast.error('Failed to delete generation');
+    }
+  };
+
   // Filter users by search
   const filteredUsers = users.filter(u =>
     u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1606,8 +1831,10 @@ const AdminPage: React.FC = () => {
                   <UserRow
                     key={user.id}
                     user={user}
+                    generations={generations}
                     onAddCredits={handleAddCredits}
                     onToggleUnlimited={handleToggleUnlimited}
+                    onDeleteGeneration={handleDeleteGeneration}
                   />
                 ))
               )}
@@ -1623,42 +1850,10 @@ const AdminPage: React.FC = () => {
               <span className="text-zinc-500 text-sm">{generations.length} total</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {generations.slice(0, 50).map((gen) => (
-                <div
-                  key={gen.id}
-                  className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl overflow-hidden group"
-                >
-                  <div className="aspect-[2/3] relative">
-                    {gen.image_url ? (
-                      <img
-                        src={gen.image_url}
-                        alt={gen.persona_name}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-zinc-800 text-zinc-600">
-                        No Image
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-white font-medium text-sm truncate">{gen.persona_name}</p>
-                    <p className="text-zinc-500 text-xs truncate">{gen.user_email}</p>
-                    <p className="text-zinc-600 text-xs mt-1">
-                      {new Date(gen.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {generations.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-zinc-500">No generations yet</p>
-              </div>
-            )}
+            <GenerationsTable
+              generations={generations}
+              onDelete={handleDeleteGeneration}
+            />
           </div>
         )}
 
