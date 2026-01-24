@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { Persona } from '../types';
 import Navigation from '../components/Navigation';
 import PersonaCard from '../components/PersonaCard';
+import MetaHead from '../components/MetaHead';
 
 // Generate a fallback placeholder for personas without covers
 
@@ -144,6 +145,7 @@ const UploadPage: React.FC = () => {
 
     return (
         <div className="flex flex-col w-full bg-[#09090b] min-h-screen md:h-screen md:overflow-hidden">
+            <MetaHead />
             <Navigation title="PosterMe" showBack={false} />
 
             {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}

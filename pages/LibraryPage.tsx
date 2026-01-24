@@ -3,6 +3,7 @@ import { useImageContext } from "../context/ImageContext.tsx";
 import { PERSONAS } from '../constants';
 import { SavedCreation } from '../types';
 import Navigation from "../components/Navigation.tsx";
+import MetaHead from '../components/MetaHead';
 import { toast } from 'sonner';
 
 // Reusing the ActionButton from ResultPage for consistency
@@ -74,6 +75,10 @@ const LibraryPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#09090b]">
+            <MetaHead
+                title="My Library | PosterMe"
+                description="View your personal collection of AI-generated movie posters. Download or delete your creations."
+            />
             <Navigation title="My Library" />
 
             {/* Image Viewer Modal */}

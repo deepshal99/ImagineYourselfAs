@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'; // Import Auth
 import { supabase } from '../lib/supabase'; // Correct import path
 import { generatePersonaImage } from '../services/geminiService';
 import Navigation from '../components/Navigation';
+import MetaHead from '../components/MetaHead';
 import { toast } from 'sonner';
 
 const ActionButton: React.FC<{
@@ -277,6 +278,12 @@ const ResultPage: React.FC = () => {
 
     return (
         <div className="flex flex-col h-screen w-full bg-[#09090b]">
+            <MetaHead
+                title={selectedPersona ? `Saved: ${selectedPersona.name} | PosterMe` : "Your Movie Poster | PosterMe"}
+                description="Your personalized movie poster is ready. Star in your favorite roles with PosterMe AI."
+                image={generatedImage || (selectedPersona?.cover)}
+                url={window.location.href}
+            />
             {!loading && <Navigation title={selectedPersona.name} />}
 
             <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden relative">

@@ -4,6 +4,7 @@ import { useImageContext } from '../context/ImageContext';
 import { useAuth } from '../context/AuthContext';
 import Navigation from '../components/Navigation';
 import PersonaCard from '../components/PersonaCard';
+import MetaHead from '../components/MetaHead';
 
 // AuthModal component for sign-in prompt
 const AuthModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -198,6 +199,12 @@ const PersonaPage: React.FC = () => {
 
     return (
         <div className="flex flex-col w-full bg-[#09090b] min-h-screen">
+            <MetaHead
+                title={`Star in ${persona.name} | PosterMe`}
+                description={`Transform your photo into a cinematic movie poster for ${persona.name} instantly. Become the star with AI.`}
+                image={persona.cover}
+                url={`https://posterme.app/persona/${persona.id}`}
+            />
             <Navigation title={persona.name} />
 
             {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}

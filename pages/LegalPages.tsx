@@ -1,8 +1,10 @@
 import React from 'react';
 import Navigation from '../components/Navigation';
+import MetaHead from '../components/MetaHead';
 
 const LegalLayout: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col">
+    <MetaHead title={`${title} | PosterMe`} description={`Read our ${title}.`} />
     <Navigation title="PosterMe" showBack={true} />
     <div className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-12">
       <h1 className="text-3xl font-bold mb-8 text-white">{title}</h1>
