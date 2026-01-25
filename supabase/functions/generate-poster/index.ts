@@ -101,31 +101,44 @@ serve(async (req) => {
       hasDescription: !!referenceDescription
     });
 
-    let genResp = await fetch(genUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: parts
-        }],
-        generationConfig: {
-          temperature: 0.9,
-          responseModalities: ["IMAGE"],
-          imageConfig: {
-            aspectRatio: "1:1",
-            imageSize: "1K"
-          }
-        },
-        safetySettings: [
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
-        ]
-      })
-    });
+    // Add timeout to prevent Edge Function timeout (max 150s, so use 120s)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
 
-
+    let genResp;
+    try {
+      genResp = await fetch(genUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [{
+            parts: parts
+          }],
+          generationConfig: {
+            temperature: 0.9,
+            responseModalities: ["IMAGE"],
+            imageConfig: {
+              aspectRatio: "1:1",
+              imageSize: "1K"
+            }
+          },
+          safetySettings: [
+            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
+          ]
+        })
+      });
+    } catch (fetchError: any) {
+      if (fetchError.name === 'AbortError') {
+        throw new Error("Generation timed out. The AI model is taking too long. Please try again.");
+      }
+      throw fetchError;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!genResp.ok) throw new Error(`Generation failed: ${await genResp.text()}`);
 

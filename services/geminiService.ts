@@ -52,8 +52,16 @@ export const generatePersonaImage = async (
     console.error("Generation Error:", error);
     let message = error.message || "Failed to generate image";
 
+    // Handle network/fetch errors (FunctionsFetchError)
+    if (error.name === 'FunctionsFetchError' || message.includes('Failed to send a request')) {
+      message = "Connection to the server failed. This could be due to network issues or high demand. Please try again.";
+    }
+    // Handle timeout errors
+    else if (message.includes('timed out') || message.includes('timeout') || message.includes('AbortError')) {
+      message = "Generation timed out. The AI model is experiencing high load. Please try again.";
+    }
     // Attempt to extract the actual error message from the response body
-    if (error instanceof Error && 'context' in error) {
+    else if (error instanceof Error && 'context' in error) {
       try {
         // @ts-ignore - context exists on FunctionsHttpError
         const body = await error.context.json();
