@@ -8,6 +8,7 @@ import { generatePersonaImage } from '../services/geminiService';
 import MetaHead from '../components/MetaHead';
 import PersonaCard from '../components/PersonaCard';
 import CreditsModal from '../components/CreditsModal';
+import Tooltip from '../components/Tooltip';
 import { toast } from 'sonner';
 
 const ActionButton: React.FC<{
@@ -505,76 +506,83 @@ const ResultPage: React.FC = () => {
                                     {/* Floating Vertical Action Bar - next to image */}
                                     <div className="shrink-0 bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-800/50 p-2 md:p-3 flex flex-col items-center gap-2 md:gap-3">
                                         {/* Download - Primary */}
-                                        <button
-                                            onClick={handleDownload}
-                                            className="p-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 transition-all hover:scale-110"
-                                            title="Download"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></svg>
-                                        </button>
+                                        <Tooltip content="Download" position="left">
+                                            <button
+                                                onClick={handleDownload}
+                                                className="p-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 transition-all hover:scale-110"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></svg>
+                                            </button>
+                                        </Tooltip>
 
                                         {/* Save */}
-                                        <button
-                                            onClick={handleSave}
-                                            className={`p-2.5 rounded-xl transition-all hover:scale-110 ${isSaved ? 'bg-green-500/20 text-green-400' : 'hover:bg-zinc-800 text-zinc-400 hover:text-white'}`}
-                                            title={isSaved ? 'Saved' : 'Save to Library'}
-                                        >
-                                            {isSaved ? (
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                                            ) : (
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                                            )}
-                                        </button>
+                                        <Tooltip content={isSaved ? 'Saved' : 'Save to Library'} position="left">
+                                            <button
+                                                onClick={handleSave}
+                                                className={`p-2.5 rounded-xl transition-all hover:scale-110 ${isSaved ? 'bg-green-500/20 text-green-400' : 'hover:bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                                            >
+                                                {isSaved ? (
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                                                ) : (
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                                )}
+                                            </button>
+                                        </Tooltip>
 
                                         <div className="w-6 h-px bg-zinc-700" />
 
                                         {/* Like */}
-                                        <button
-                                            onClick={() => handleFeedback('like')}
-                                            className={`p-2.5 rounded-xl transition-all hover:scale-110 ${feedback === 'like' ? 'bg-blue-500/20 text-blue-400' : 'hover:bg-zinc-800 text-zinc-400 hover:text-white'}`}
-                                            title="Like"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
-                                        </button>
+                                        <Tooltip content="Like result" position="left">
+                                            <button
+                                                onClick={() => handleFeedback('like')}
+                                                className={`p-2.5 rounded-xl transition-all hover:scale-110 ${feedback === 'like' ? 'bg-blue-500/20 text-blue-400' : 'hover:bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
+                                            </button>
+                                        </Tooltip>
 
                                         {/* Dislike */}
-                                        <button
-                                            onClick={() => handleFeedback('dislike')}
-                                            className={`p-2.5 rounded-xl transition-all hover:scale-110 ${feedback === 'dislike' ? 'bg-orange-500/20 text-orange-400' : 'hover:bg-zinc-800 text-zinc-400 hover:text-white'}`}
-                                            title="Dislike"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" /></svg>
-                                        </button>
+                                        <Tooltip content="Dislike result" position="left">
+                                            <button
+                                                onClick={() => handleFeedback('dislike')}
+                                                className={`p-2.5 rounded-xl transition-all hover:scale-110 ${feedback === 'dislike' ? 'bg-orange-500/20 text-orange-400' : 'hover:bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" /></svg>
+                                            </button>
+                                        </Tooltip>
 
                                         <div className="w-6 h-px bg-zinc-700" />
 
                                         {/* Retry */}
                                         {(credits > 0 || isUnlimited) ? (
-                                            <button
-                                                onClick={() => generateImage(true)}
-                                                className="p-2.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white transition-all hover:scale-110"
-                                                title="Retry"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                                            </button>
+                                            <Tooltip content="Retry generation" position="left">
+                                                <button
+                                                    onClick={() => generateImage(true)}
+                                                    className="p-2.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white transition-all hover:scale-110"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                                </button>
+                                            </Tooltip>
                                         ) : (
-                                            <button
-                                                onClick={buyCredits}
-                                                className="p-2.5 rounded-xl hover:bg-zinc-800 text-zinc-500 transition-all"
-                                                title="Buy credits"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                            </button>
+                                            <Tooltip content="Buy credits" position="left">
+                                                <button
+                                                    onClick={buyCredits}
+                                                    className="p-2.5 rounded-xl hover:bg-zinc-800 text-zinc-500 transition-all"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                </button>
+                                            </Tooltip>
                                         )}
 
                                         {/* Discard */}
-                                        <button
-                                            onClick={handleDiscard}
-                                            className="p-2.5 rounded-xl hover:bg-red-500/10 text-zinc-400 hover:text-red-400 transition-all hover:scale-110"
-                                            title="Discard"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                        </button>
+                                        <Tooltip content="Discard & Back" position="left">
+                                            <button
+                                                onClick={handleDiscard}
+                                                className="p-2.5 rounded-xl hover:bg-red-500/10 text-zinc-400 hover:text-red-400 transition-all hover:scale-110"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                            </button>
+                                        </Tooltip>
                                     </div>
                                 </div>
                             </div>
