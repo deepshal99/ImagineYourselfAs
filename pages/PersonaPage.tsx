@@ -305,14 +305,14 @@ const PersonaPage: React.FC = () => {
             {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
             {showCreditsModal && <CreditsModal onClose={() => setShowCreditsModal(false)} />}
 
-            <div className="flex-1 flex flex-col md:flex-row-reverse relative md:min-h-screen">
+            <div className="flex-1 flex flex-col md:flex-row-reverse relative md:min-h-screen pt-16 md:pt-0">
 
                 {/* PANE 1 (DOM First): Upload Area & Header */}
                 {/* Mobile: Top | Desktop: Right (due to flex-row-reverse) */}
-                <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 border-b border-zinc-800/50 md:border-b-0">
+                <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 md:pt-20 border-b border-zinc-800/50 md:border-b-0">
 
                     {/* Unified Header (Visible on Mobile & Desktop) */}
-                    <div className="mb-6 md:mb-8 text-center px-4 animate-fade-in w-full max-w-md mx-auto">
+                    <div className="mb-6 md:mb-8 text-center px-4 animate-fade-in w-full max-w-md mx-auto mt-4 md:mt-0">
                         <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight text-white mb-2 md:mb-3 leading-snug md:leading-tight">
                             {headerTitle}
                         </h1>

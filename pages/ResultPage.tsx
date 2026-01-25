@@ -468,7 +468,7 @@ const ResultPage: React.FC = () => {
                     </div>
 
                     {/* Hero Section - Full viewport height */}
-                    <main className="h-svh flex flex-col">
+                    <main className="h-svh flex flex-col pt-16 md:pt-0">
 
                         {/* Waiting for Key */}
                         {waitingForKey && (
