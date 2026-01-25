@@ -172,10 +172,7 @@ const UploadPage: React.FC = () => {
 
             {/* Floating Top-Left: Logo/Brand */}
             <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
-                <h1 className="text-lg font-bold text-white bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800/50 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                    </svg>
+                <h1 className="text-lg font-bold text-white bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800/50">
                     PosterMe
                 </h1>
             </div>
@@ -292,14 +289,11 @@ const UploadPage: React.FC = () => {
                     <div className="p-6 pt-4 md:p-8 md:pt-20 lg:p-10 lg:pt-20 flex flex-col h-full justify-center">
 
                         {/* Hero Text */}
-                        <div className="mb-8 md:mb-10 text-center md:text-left">
-                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight">
-                                Star in Your<br />
-                                <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                                    Favorite Movie
-                                </span>
+                        <div className="mt-12 mb-4 md:mb-8 text-center md:text-left">
+                            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
+                                Star in Your Favorite Movie or Show
                             </h2>
-                            <p className="text-zinc-400 text-base md:text-lg">
+                            <p className="text-zinc-300 text-sm md:text-md leading-relaxed">
                                 Upload a selfie, pick a poster, become the star.
                             </p>
                         </div>

@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="w-full bg-[#09090b] border-t border-zinc-800 py-8 mt-auto">
+    <footer className="w-full bg-[#09090b] border-t border-zinc-800 py-4 mt-auto">
       <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-        
+
         {/* Brand & Copyright */}
         <div className="text-center md:text-left">
           <p className="text-zinc-500 text-sm">
