@@ -2,9 +2,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useImageContext } from '../context/ImageContext';
 import { useAuth } from '../context/AuthContext';
-import Navigation from '../components/Navigation';
+
 import PersonaCard from '../components/PersonaCard';
 import MetaHead from '../components/MetaHead';
+import CreditsModal from '../components/CreditsModal';
 
 // AuthModal component for sign-in prompt
 const AuthModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -48,19 +49,41 @@ const AuthModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 const PersonaPage: React.FC = () => {
     const { personaId } = useParams<{ personaId: string }>();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, signOut } = useAuth();
     const {
         uploadedImage, setUploadedImage,
         setSelectedPersona,
         personas, setGeneratedImage,
-        personasLoaded
+        personasLoaded,
+        credits, isUnlimited, buyCredits
     } = useImageContext();
 
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const [linkCopied, setLinkCopied] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showCreditsModal, setShowCreditsModal] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Check if user is admin
+    const isAdmin = user?.email && (
+        (import.meta.env.VITE_ADMIN_EMAILS || 'deepshal99@gmail.com')
+            .split(',')
+            .map((e: string) => e.trim().toLowerCase())
+    ).includes(user.email.toLowerCase());
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Handle share link copy
     const handleShare = async () => {
@@ -205,9 +228,111 @@ const PersonaPage: React.FC = () => {
                 image={persona.cover}
                 url={`https://posterme.app/persona/${persona.id}`}
             />
-            <Navigation title={persona.name} />
+            {/* Floating Top-Left: Back + Title */}
+            <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="p-2.5 rounded-full bg-zinc-900/80 backdrop-blur-md hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors border border-zinc-800/50"
+                    aria-label="Go back"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </button>
+                <h1 className="text-lg font-bold text-white bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800/50 truncate max-w-[200px] md:max-w-xs">
+                    {persona.name}
+                </h1>
+            </div>
+
+            {/* Floating Top-Right: Credits + User */}
+            <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+                {/* Credits Button */}
+                <button
+                    onClick={() => setShowCreditsModal(true)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-full bg-zinc-900/80 backdrop-blur-md border transition-all ${isUnlimited || credits > 0
+                        ? 'border-zinc-800/50 text-zinc-300 hover:bg-zinc-800'
+                        : 'border-red-500/30 text-red-400 animate-pulse'
+                        }`}
+                >
+                    {isUnlimited ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 12c-2-2.67-6-2.67-8 0a4 4 0 1 0 0 8c2 2.67 6 2.67 8 0a4 4 0 1 0 0-8Z" />
+                            <path d="M12 12c2-2.67 6-2.67 8 0a4 4 0 1 1 0 8c-2 2.67-6 2.67-8 0a4 4 0 1 1 0-8Z" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
+                        </svg>
+                    )}
+                    <span className="text-xs font-bold">{isUnlimited ? 'PRO' : credits}</span>
+                </button>
+
+                {/* User Avatar with Dropdown */}
+                {user && (
+                    <div className="relative" ref={menuRef}>
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className="rounded-full overflow-hidden border-2 border-zinc-800/50 hover:border-zinc-600 transition-colors"
+                        >
+                            {user.user_metadata?.avatar_url ? (
+                                <img src={user.user_metadata.avatar_url} alt="User" className="w-9 h-9" />
+                            ) : (
+                                <div className="w-9 h-9 bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                                    {user.email?.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {isMenuOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-64 z-50 animate-scale-up origin-top-right">
+                                <div className="bg-[#09090b] border border-zinc-800 rounded-xl shadow-2xl overflow-hidden">
+                                    <div className="p-4 border-b border-zinc-800 bg-zinc-900/50">
+                                        <p className="text-white font-medium truncate">{user.user_metadata?.full_name || 'User'}</p>
+                                        <p className="text-zinc-500 text-xs truncate">{user.email}</p>
+                                    </div>
+                                    <div className="p-2">
+                                        <button
+                                            onClick={() => { setIsMenuOpen(false); navigate('/library'); }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            My Library
+                                        </button>
+                                        {isAdmin && (
+                                            <button
+                                                onClick={() => { setIsMenuOpen(false); navigate('/admin'); }}
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                Admin Dashboard
+                                            </button>
+                                        )}
+                                        <div className="h-px bg-zinc-800 my-2"></div>
+                                        <button
+                                            onClick={() => { setIsMenuOpen(false); signOut(); }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            Sign Out
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+            {showCreditsModal && <CreditsModal onClose={() => setShowCreditsModal(false)} />}
 
             <div className="flex-1 flex flex-col md:flex-row-reverse relative md:min-h-screen">
 
