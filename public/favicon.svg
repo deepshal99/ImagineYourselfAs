@@ -1,12 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect x="0" y="0" width="512" height="512" rx="128" fill="url(#grad)" />
-  <path d="M150 150 L362 150 L362 362 L150 362 Z" fill="none" stroke="white" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="256" cy="256" r="60" fill="white" />
-  <circle cx="320" cy="190" r="20" fill="white" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="155 62 202 202">
+  <rect x="155" y="62" width="202" height="202" rx="40" fill="#09090b"/>
+  <!-- Head outline -->
+  <path d="M186.17,172.02 C180.74,201.97 204.01,231.26 238.15,237.45 C272.29,243.64 304.36,224.38 309.79,194.43 C315.22,164.48 293.65,125.79 259.51,119.6 C225.37,113.41 191.6,142.07 186.17,172.02Z"
+    stroke="#ececef" stroke-width="15.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Right ear -->
+  <path d="M310.02,176.43 C324.88,176.49 338.05,165.59 340.18,150.2 C342.29,134.9 332.34,120.24 317.33,116.59 C308.33,114.41 299.42,116.44 292.52,121.33 C289.05,123.79 286.1,126.99 283.9,130.73"
+    stroke="#ececef" stroke-width="15.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Left ear -->
+  <path d="M192.27,155.09 C178.73,150.07 170.31,135.93 172.98,121.22 C175.97,104.73 191.76,93.78 208.26,96.77 C221.15,99.1 230.65,109.26 232.77,121.46"
+    stroke="#ececef" stroke-width="15.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Nose -->
+  <path d="M243.66,207.03 C252.03,208.54 260.05,202.99 261.56,194.62 L263.35,184.79 C264.86,176.43 259.31,168.41 250.94,166.89 C242.57,165.38 234.56,170.93 233.04,179.3 L231.26,189.13 C229.74,197.5 235.3,205.51 243.66,207.03Z"
+    stroke="#ececef" stroke-width="15.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Left eye -->
+  <line x1="223.71" y1="154.7" x2="222.96" y2="158.84" stroke="#6c72cb" stroke-width="15.4" stroke-linecap="round"/>
+  <!-- Right eye -->
+  <line x1="280.72" y1="165.04" x2="279.97" y2="169.17" stroke="#6c72cb" stroke-width="15.4" stroke-linecap="round"/>
 </svg>

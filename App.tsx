@@ -20,7 +20,7 @@ const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
 
 const LoadingSpinner = () => (
   <div className="min-h-screen w-full bg-[#09090b] flex items-center justify-center">
-    <div className="w-12 h-12 border-4 border-zinc-800 border-t-blue-500 rounded-full animate-spin"></div>
+    <div className="w-12 h-12 border-4 border-zinc-800 rounded-full animate-spin" style={{ borderTopColor: '#6c72cb' }}></div>
   </div>
 );
 

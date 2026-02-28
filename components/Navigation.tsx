@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useImageContext } from '../context/ImageContext';
 import { useAuth } from '../context/AuthContext';
+import Postey from './Postey';
+import { ArrowLeft, Images, Settings, LogOut, Zap, Infinity } from 'lucide-react';
 
 const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, showBack = true }) => {
     const navigate = useNavigate();
@@ -16,7 +18,6 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
 
     const isHome = location.pathname === '/';
 
-    // Close menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -30,7 +31,6 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Check if user is admin
     const isAdmin = user?.email && (
         (import.meta.env.VITE_ADMIN_EMAILS || 'deepshal99@gmail.com')
             .split(',')
@@ -38,7 +38,7 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
     ).includes(user.email.toLowerCase());
 
     return (
-        <nav className="w-full px-6 py-4 sticky top-0 z-[100] bg-[#09090b]/80 backdrop-blur-md border-b border-zinc-800/50">
+        <nav className="w-full px-6 py-4 sticky top-0 z-[100] bg-[var(--bg)]/80 backdrop-blur-xl border-b border-white/[0.06]">
             <div className="w-full flex justify-between items-center">
 
                 {/* Left: Back Button & Title */}
@@ -46,27 +46,28 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                     {showBack && !isHome && (
                         <button
                             onClick={() => navigate(-1)}
-                            className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                            className="p-2 rounded-xl hover:bg-white/[0.06] text-[var(--text-secondary)] hover:text-white transition-colors"
                             aria-label="Go back"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
+                            <ArrowLeft size={20} />
                         </button>
                     )}
-                    <h1
-                        className="text-xl font-bold text-white cursor-pointer"
+                    <div
+                        className="flex items-center gap-2 cursor-pointer group"
                         onClick={() => navigate('/')}
                     >
-                        {title || "PosterMe"}
-                    </h1>
+                        <Postey size={24} mood="idle" className="group-hover:scale-110 transition-transform" />
+                        <h1 className="text-xl font-bold text-white">
+                            {title || "PosterMe"}
+                        </h1>
+                    </div>
                 </div>
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-3 sm:gap-4">
 
                     {loading ? (
-                        <div className="w-8 h-8 rounded-full border-2 border-zinc-700 border-t-zinc-500 animate-spin"></div>
+                        <div className="w-8 h-8 rounded-full border-2 border-white/[0.08] border-t-white/[0.2] animate-spin"></div>
                     ) : user ? (
                         <>
                             {/* Credits Dropdown */}
@@ -75,27 +76,22 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                                     onClick={() => !isUnlimited && setIsCreditMenuOpen(!isCreditMenuOpen)}
                                     disabled={isUnlimited}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all active:scale-95 ${isUnlimited || credits > 0
-                                        ? 'bg-zinc-800/50 border-zinc-700 text-zinc-300 hover:bg-zinc-800 cursor-pointer'
+                                        ? 'bg-white/[0.04] border-white/[0.08] text-zinc-300 hover:bg-white/[0.08] cursor-pointer'
                                         : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 cursor-pointer animate-pulse'
-                                        } ${isUnlimited ? 'cursor-default hover:bg-zinc-800/50' : ''}`}
+                                        } ${isUnlimited ? 'cursor-default hover:bg-white/[0.04]' : ''}`}
                                     title={isUnlimited ? "Unlimited Plan" : "Buy Credits"}
                                 >
                                     {isUnlimited ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M12 12c-2-2.67-6-2.67-8 0a4 4 0 1 0 0 8c2 2.67 6 2.67 8 0a4 4 0 1 0 0-8Z" />
-                                            <path d="M12 12c2-2.67 6-2.67 8 0a4 4 0 1 1 0 8c-2 2.67-6 2.67-8 0a4 4 0 1 1 0-8Z" />
-                                        </svg>
+                                        <Infinity size={14} className="text-amber-400" />
                                     ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
-                                        </svg>
+                                        <Zap size={14} />
                                     )}
                                     <span className="text-xs font-bold">
                                         {isUnlimited ? 'PRO' : credits}
                                     </span>
                                     {!isUnlimited && (
-                                        <span className="text-[10px] ml-1 bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-wider">
-                                            Click
+                                        <span className="text-[10px] ml-1 bg-amber-500/15 text-amber-400 px-1.5 py-0.5 rounded-full uppercase tracking-wider font-semibold">
+                                            Buy
                                         </span>
                                     )}
                                 </button>
@@ -103,36 +99,34 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                                 {/* Credit Dropdown Menu */}
                                 {isCreditMenuOpen && !isUnlimited && (
                                     <div className="absolute right-0 top-full mt-3 w-72 z-50 animate-scale-up origin-top-right">
-                                        <div className="bg-[#09090b] border border-zinc-800 rounded-2xl shadow-2xl p-1 overflow-hidden">
-                                            <div className="p-4 bg-zinc-900/50 border-b border-zinc-800 rounded-t-xl">
-                                                <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Current Balance</p>
+                                        <div className="bg-[var(--surface)] border border-white/[0.08] rounded-2xl shadow-2xl p-1 overflow-hidden">
+                                            <div className="p-4 bg-white/[0.02] border-b border-white/[0.06] rounded-t-xl">
+                                                <p className="text-[var(--text-muted)] text-xs font-medium uppercase tracking-wider mb-1">Current Balance</p>
                                                 <p className="text-2xl font-bold text-white flex items-center gap-2">
-                                                    {credits} <span className="text-sm font-normal text-zinc-500">Credits</span>
+                                                    {credits} <span className="text-sm font-normal text-[var(--text-muted)]">Credits</span>
                                                 </p>
                                             </div>
 
                                             <div className="p-4">
-                                                <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-xl p-4 relative overflow-hidden group hover:border-zinc-600 transition-colors">
+                                                <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 relative overflow-hidden group hover:border-white/[0.1] transition-colors">
                                                     {/* Badge */}
-                                                    <div className="absolute top-0 right-0 bg-emerald-500 text-black text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                                                    <div className="absolute top-0 right-0 bg-emerald-500 text-black text-[10px] font-bold px-2 py-1 rounded-bl-xl">
                                                         50% OFF
                                                     </div>
 
                                                     <div className="flex items-start gap-3 mb-3">
-                                                        <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                            </svg>
+                                                        <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)]">
+                                                            <Zap size={20} />
                                                         </div>
                                                         <div>
                                                             <h3 className="font-bold text-white text-sm">Starter Pack</h3>
-                                                            <p className="text-xs text-zinc-400">5 High Quality Generations</p>
+                                                            <p className="text-xs text-[var(--text-secondary)]">5 High Quality Generations</p>
                                                         </div>
                                                     </div>
 
                                                     <div className="flex items-end gap-2 mb-4">
                                                         <span className="text-2xl font-bold text-white">₹49</span>
-                                                        <span className="text-sm text-zinc-500 line-through mb-1">₹99</span>
+                                                        <span className="text-sm text-[var(--text-muted)] line-through mb-1">₹99</span>
                                                     </div>
 
                                                     <button
@@ -140,11 +134,9 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                                                             setIsCreditMenuOpen(false);
                                                             buyCredits();
                                                         }}
-                                                        className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                                        className="w-full bg-[var(--accent)] text-white font-bold py-2 rounded-xl text-sm hover:bg-[var(--accent-hover)] transition-colors flex items-center justify-center gap-2"
                                                     >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                        </svg>
+                                                        <Zap size={16} />
                                                         Buy Now
                                                     </button>
                                                 </div>
@@ -159,7 +151,6 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                                 className="relative h-full flex items-center"
                                 ref={menuRef}
                             >
-                                {/* Profile Trigger Button (Click Only) */}
                                 <button
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                                     className="flex items-center gap-2 focus:outline-none py-2"
@@ -169,10 +160,10 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                                             <img
                                                 src={user.user_metadata.avatar_url}
                                                 alt="Avatar"
-                                                className="w-9 h-9 rounded-full border border-zinc-700 hover:border-zinc-500 transition-colors"
+                                                className="w-9 h-9 rounded-full border-2 border-white/[0.08] hover:border-white/[0.15] transition-colors"
                                             />
                                         ) : (
-                                            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold border border-zinc-700">
+                                            <div className="w-9 h-9 rounded-full bg-[var(--accent)] flex items-center justify-center text-white font-bold border-2 border-white/[0.08]">
                                                 {user.email?.charAt(0).toUpperCase()}
                                             </div>
                                         )}
@@ -182,23 +173,19 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                                 {/* Dropdown Menu */}
                                 {isMenuOpen && (
                                     <div className="absolute right-0 top-full mt-2 w-64 z-50 animate-scale-up origin-top-right">
-                                        <div className="bg-[#09090b] border border-zinc-800 rounded-xl shadow-2xl overflow-hidden">
-                                            {/* User Info Header */}
-                                            <div className="p-4 border-b border-zinc-800 bg-zinc-900/50">
+                                        <div className="bg-[var(--surface)] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden">
+                                            <div className="p-4 border-b border-white/[0.06] bg-white/[0.02]">
                                                 <p className="text-white font-medium truncate">{user.user_metadata.full_name || 'User'}</p>
-                                                <p className="text-zinc-500 text-xs truncate">{user.email}</p>
+                                                <p className="text-[var(--text-muted)] text-xs truncate">{user.email}</p>
                                             </div>
 
-                                            {/* Menu Items */}
                                             <div className="p-2">
                                                 <Link
                                                     to="/library"
                                                     onClick={() => setIsMenuOpen(false)}
-                                                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                                                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-white/[0.06] rounded-xl transition-colors"
                                                 >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
+                                                    <Images size={16} />
                                                     My Library
                                                 </Link>
 
@@ -206,28 +193,23 @@ const Navigation: React.FC<{ title?: string, showBack?: boolean }> = ({ title, s
                                                     <Link
                                                         to="/admin"
                                                         onClick={() => setIsMenuOpen(false)}
-                                                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                                                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-white/[0.06] rounded-xl transition-colors"
                                                     >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        </svg>
+                                                        <Settings size={16} />
                                                         Admin Dashboard
                                                     </Link>
                                                 )}
 
-                                                <div className="h-px bg-zinc-800 my-2"></div>
+                                                <div className="h-px bg-white/[0.06] my-2"></div>
 
                                                 <button
                                                     onClick={() => {
                                                         setIsMenuOpen(false);
                                                         signOut();
                                                     }}
-                                                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+                                                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors text-left"
                                                 >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                                    </svg>
+                                                    <LogOut size={16} />
                                                     Sign Out
                                                 </button>
                                             </div>

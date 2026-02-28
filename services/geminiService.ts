@@ -56,6 +56,10 @@ export const generatePersonaImage = async (
     if (error.name === 'FunctionsFetchError' || message.includes('Failed to send a request')) {
       message = "Connection to the server failed. This could be due to network issues or high demand. Please try again.";
     }
+    // Handle HTML response errors (auth redirect / function not found)
+    else if (message.includes('<!DOCTYPE') || message.includes('Unexpected token')) {
+      message = "Authentication session expired. Please sign out and sign in again.";
+    }
     // Handle timeout errors
     else if (message.includes('timed out') || message.includes('timeout') || message.includes('AbortError')) {
       message = "Generation timed out. The AI model is experiencing high load. Please try again.";

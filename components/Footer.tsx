@@ -3,21 +3,21 @@ import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="w-full bg-[#09090b] border-t border-zinc-800 py-4 mt-auto">
+    <footer className="w-full bg-[var(--bg)] border-t border-white/[0.06] py-4 mt-auto">
       <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
 
         {/* Brand & Copyright */}
         <div className="text-center md:text-left">
-          <p className="text-zinc-500 text-sm">
-            © {new Date().getFullYear()} PosterMe. All rights reserved.
+          <p className="text-[var(--text-muted)] text-sm">
+            &copy; {new Date().getFullYear()} PosterMe. All rights reserved.
           </p>
-          <p className="text-zinc-600 text-xs mt-1">
+          <p className="text-[var(--text-muted)] text-xs mt-1">
             AI-Powered Persona Generation
           </p>
         </div>
 
         {/* Links */}
-        <div className="flex flex-wrap justify-center gap-6 text-sm text-zinc-400">
+        <div className="flex flex-wrap justify-center gap-6 text-sm text-[var(--text-muted)]">
           <Link to="/terms" className="hover:text-white transition-colors">
             Terms & Conditions
           </Link>
@@ -37,4 +37,3 @@ const Footer: React.FC = () => {
 };
 
 export default Footer;
-

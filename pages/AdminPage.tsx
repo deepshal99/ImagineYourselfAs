@@ -1630,7 +1630,7 @@ const AdminPage: React.FC = () => {
     return (
       <div className="min-h-screen w-full bg-[#09090b] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-zinc-800 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-zinc-800 rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: '#6c72cb' }}></div>
           <p className="text-zinc-500">Loading admin dashboard...</p>
         </div>
       </div>

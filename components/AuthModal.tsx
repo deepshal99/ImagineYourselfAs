@@ -1,30 +1,31 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Lock, X } from 'lucide-react';
 
 const AuthModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const { signInWithGoogle } = useAuth();
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose}>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl relative" onClick={e => e.stopPropagation()}>
+            <div className="bg-[var(--surface)] border border-white/[0.08] rounded-3xl p-8 max-w-sm w-full shadow-2xl relative" onClick={e => e.stopPropagation()}>
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+                    className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-white transition-colors"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                    <X size={20} />
                 </button>
 
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    <div className="w-16 h-16 bg-[var(--accent-soft)] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Lock size={28} className="text-[var(--accent)]" />
                     </div>
                     <h2 className="text-2xl font-bold text-white mb-2">Sign in to Create</h2>
-                    <p className="text-zinc-400">Join PosterMe to generate unlimited AI posters with your own face.</p>
+                    <p className="text-[var(--text-secondary)]">Join PosterMe to generate unlimited AI posters with your own face.</p>
                 </div>
 
                 <button
                     onClick={() => signInWithGoogle()}
-                    className="w-full flex items-center justify-center gap-3 bg-white text-black font-bold py-3.5 rounded-xl hover:bg-zinc-200 transition-colors"
+                    className="w-full flex items-center justify-center gap-3 bg-white text-black font-bold py-3.5 rounded-2xl hover:bg-zinc-200 transition-colors"
                 >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />

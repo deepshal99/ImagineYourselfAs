@@ -8,6 +8,9 @@ import MetaHead from '../components/MetaHead';
 import CreditsModal from '../components/CreditsModal';
 import AuthModal from '../components/AuthModal';
 
+import Postey from '../components/Postey';
+import { ArrowLeft, Upload, Trash2, RefreshCw, Check, Zap, Share2, Infinity, Images, Settings, LogOut } from 'lucide-react';
+
 const PersonaPage: React.FC = () => {
     const { personaId } = useParams<{ personaId: string }>();
     const navigate = useNavigate();
@@ -29,14 +32,12 @@ const PersonaPage: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // Check if user is admin
     const isAdmin = user?.email && (
         (import.meta.env.VITE_ADMIN_EMAILS || 'deepshal99@gmail.com')
             .split(',')
             .map((e: string) => e.trim().toLowerCase())
     ).includes(user.email.toLowerCase());
 
-    // Close menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -47,7 +48,6 @@ const PersonaPage: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Handle share link copy
     const handleShare = async () => {
         const url = window.location.href;
         try {
@@ -55,7 +55,6 @@ const PersonaPage: React.FC = () => {
             setLinkCopied(true);
             setTimeout(() => setLinkCopied(false), 2000);
         } catch (err) {
-            // Fallback for older browsers
             const textArea = document.createElement('textarea');
             textArea.value = url;
             document.body.appendChild(textArea);
@@ -67,27 +66,19 @@ const PersonaPage: React.FC = () => {
         }
     };
 
-    // Find the persona from the URL param
     const persona = personas.find(p => p.id === personaId);
 
-    // Handle 404 - persona not found (only check after personas finished loading)
     useEffect(() => {
         if (personasLoaded && !persona) {
-            // Personas loaded but this one doesn't exist
             navigate('/', { replace: true });
         }
     }, [persona, personasLoaded, navigate]);
 
-    // Listen for state restoration (e.g. after login)
     useEffect(() => {
         const handleRestore = (e: CustomEvent) => {
             const { uploadedImage: restoredImage, personaId: restoredId } = e.detail;
-            // Only restore if it matches the current page's persona
             if (restoredId === personaId && restoredImage) {
                 setUploadedImage(restoredImage);
-                // Optional: Trigger creation immediately or just show the state?
-                // For now, let's just restore the state so they see their image.
-                // If we want auto-create, we'd need to set a flag or call handleCreate (but handleCreate needs internal state)
             }
         };
 
@@ -146,7 +137,6 @@ const PersonaPage: React.FC = () => {
         if (!uploadedImage || !persona) return;
 
         if (!user) {
-            // Save state for after sign-in
             localStorage.setItem('posterme_pending_generation', JSON.stringify({
                 uploadedImage,
                 personaId: persona.id,
@@ -156,34 +146,30 @@ const PersonaPage: React.FC = () => {
             return;
         }
 
-        // Set persona in context and navigate to result
         setSelectedPersona(persona);
         setIsNavigating(true);
         navigate('/result');
     };
 
-    // Loading state while personas are being fetched
     if (!personasLoaded) {
         return (
-            <div className="min-h-screen w-full bg-[#09090b] flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-zinc-800 border-t-blue-500 rounded-full animate-spin"></div>
+            <div className="min-h-screen w-full bg-[var(--bg)] flex flex-col items-center justify-center gap-4">
+                <Postey size={56} mood="directing" />
+                <p className="text-[var(--text-muted)] text-sm font-medium">Loading...</p>
             </div>
         );
     }
 
-    // Persona not found (will redirect via useEffect)
     if (!persona) {
         return null;
     }
 
-    // Dynamic Header Logic
-    // "Clean and short" approach
     const isValorant = persona.name.toLowerCase().includes('valorant');
     const headerTitle = isValorant ? "Become a Valorant Agent" : `Star in ${persona.name}`;
     const headerDescription = "Upload a clear selfie to generate your unique poster.";
 
     return (
-        <div className="flex flex-col w-full bg-[#09090b] min-h-screen">
+        <div className="flex flex-col w-full bg-[var(--bg)] min-h-screen">
             <MetaHead
                 title={`${persona.name} Movie Poster - Starring You | PosterMe`}
                 description={`See yourself cast as ${persona.name}. Create this official-style movie poster instantly with PosterMe AI.`}
@@ -193,15 +179,13 @@ const PersonaPage: React.FC = () => {
             {/* Floating Top-Left: Back + Title */}
             <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
                 <button
-                    onClick={() => navigate(-1)}
-                    className="p-2.5 rounded-full bg-zinc-900/80 backdrop-blur-md hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors border border-zinc-800/50"
+                    onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')}
+                    className="p-2.5 rounded-xl bg-[var(--surface)]/80 backdrop-blur-xl hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white transition-colors border border-white/[0.06]"
                     aria-label="Go back"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
+                    <ArrowLeft size={20} />
                 </button>
-                <h1 className="text-lg font-bold text-white bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800/50 truncate max-w-[200px] md:max-w-xs">
+                <h1 className="text-lg font-bold text-white bg-[var(--surface)]/80 backdrop-blur-xl px-4 py-2 rounded-full border border-white/[0.06] truncate max-w-[200px] md:max-w-xs">
                     {persona.name}
                 </h1>
             </div>
@@ -210,80 +194,65 @@ const PersonaPage: React.FC = () => {
             <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
                 {user ? (
                     <>
-                        {/* Credits Button */}
                         <button
                             onClick={() => setShowCreditsModal(true)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-full bg-zinc-900/80 backdrop-blur-md border transition-all ${isUnlimited || credits > 0
-                                ? 'border-zinc-800/50 text-zinc-300 hover:bg-zinc-800'
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-full bg-[var(--surface)]/80 backdrop-blur-xl border transition-all ${isUnlimited || credits > 0
+                                ? 'border-white/[0.06] text-zinc-300 hover:bg-white/[0.08]'
                                 : 'border-red-500/30 text-red-400 animate-pulse'
                                 }`}
                         >
                             {isUnlimited ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M12 12c-2-2.67-6-2.67-8 0a4 4 0 1 0 0 8c2 2.67 6 2.67 8 0a4 4 0 1 0 0-8Z" />
-                                    <path d="M12 12c2-2.67 6-2.67 8 0a4 4 0 1 1 0 8c-2 2.67-6 2.67-8 0a4 4 0 1 1 0-8Z" />
-                                </svg>
+                                <Infinity size={16} className="text-amber-400" />
                             ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
-                                </svg>
+                                <Zap size={16} />
                             )}
                             <span className="text-xs font-bold">{isUnlimited ? 'PRO' : credits}</span>
                         </button>
 
-                        {/* User Avatar with Dropdown */}
                         <div className="relative" ref={menuRef}>
                             <button
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                className="rounded-full overflow-hidden border-2 border-zinc-800/50 hover:border-zinc-600 transition-colors"
+                                className="rounded-full overflow-hidden border-2 border-white/[0.08] hover:border-white/[0.15] transition-colors"
                             >
                                 {user.user_metadata?.avatar_url ? (
                                     <img src={user.user_metadata.avatar_url} alt="User" className="w-9 h-9" />
                                 ) : (
-                                    <div className="w-9 h-9 bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                                    <div className="w-9 h-9 bg-[var(--accent)] flex items-center justify-center text-white font-bold text-sm">
                                         {user.email?.charAt(0).toUpperCase()}
                                     </div>
                                 )}
                             </button>
 
-                            {/* Dropdown Menu */}
                             {isMenuOpen && (
                                 <div className="absolute right-0 top-full mt-2 w-64 z-50 animate-scale-up origin-top-right">
-                                    <div className="bg-[#09090b] border border-zinc-800 rounded-xl shadow-2xl overflow-hidden">
-                                        <div className="p-4 border-b border-zinc-800 bg-zinc-900/50">
+                                    <div className="bg-[var(--surface)] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden">
+                                        <div className="p-4 border-b border-white/[0.06] bg-white/[0.02]">
                                             <p className="text-white font-medium truncate">{user.user_metadata?.full_name || 'User'}</p>
-                                            <p className="text-zinc-500 text-xs truncate">{user.email}</p>
+                                            <p className="text-[var(--text-muted)] text-xs truncate">{user.email}</p>
                                         </div>
                                         <div className="p-2">
                                             <button
                                                 onClick={() => { setIsMenuOpen(false); navigate('/library'); }}
-                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-white/[0.06] rounded-xl transition-colors text-left"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
+                                                <Images size={16} />
                                                 My Library
                                             </button>
                                             {isAdmin && (
                                                 <button
                                                     onClick={() => { setIsMenuOpen(false); navigate('/admin'); }}
-                                                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                                                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-white/[0.06] rounded-xl transition-colors text-left"
                                                 >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
+                                                    <Settings size={16} />
                                                     Admin Dashboard
                                                 </button>
                                             )}
-                                            <div className="h-px bg-zinc-800 my-2"></div>
+                                            <div className="h-px bg-white/[0.06] my-2"></div>
                                             <button
                                                 onClick={() => { setIsMenuOpen(false); signOut(); }}
-                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors text-left"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                                </svg>
+                                                <LogOut size={16} />
                                                 Sign Out
                                             </button>
                                         </div>
@@ -295,7 +264,7 @@ const PersonaPage: React.FC = () => {
                 ) : (
                     <button
                         onClick={() => setShowAuthModal(true)}
-                        className="px-5 py-2 bg-white text-black text-sm font-bold rounded-full hover:bg-zinc-200 transition-all hover:scale-105 shadow-lg shadow-white/10"
+                        className="px-5 py-2 bg-white text-black text-sm font-bold rounded-full hover:bg-zinc-200 transition-all hover:scale-105 shadow-lg shadow-white/5"
                     >
                         Sign In
                     </button>
@@ -307,16 +276,14 @@ const PersonaPage: React.FC = () => {
 
             <div className="flex-1 flex flex-col md:flex-row-reverse relative md:min-h-screen pt-16 md:pt-0">
 
-                {/* PANE 1 (DOM First): Upload Area & Header */}
-                {/* Mobile: Top | Desktop: Right (due to flex-row-reverse) */}
-                <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 md:pt-20 border-b border-zinc-800/50 md:border-b-0">
+                {/* PANE 1: Upload Area & Header */}
+                <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 md:p-6 md:pt-20 border-b border-white/[0.06] md:border-b-0">
 
-                    {/* Unified Header (Visible on Mobile & Desktop) */}
                     <div className="mb-6 md:mb-8 text-center px-4 animate-fade-in w-full max-w-md mx-auto mt-4 md:mt-0">
                         <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight text-white mb-2 md:mb-3 leading-snug md:leading-tight">
                             {headerTitle}
                         </h1>
-                        <p className="text-zinc-400 text-sm md:text-base leading-relaxed text-balance">
+                        <p className="text-[var(--text-secondary)] text-sm md:text-base leading-relaxed text-balance">
                             {headerDescription}
                         </p>
                     </div>
@@ -330,8 +297,8 @@ const PersonaPage: React.FC = () => {
                                 onDrop={handleDrop}
                                 className={`w-full aspect-[3/4] max-h-[50vh] md:max-h-[55vh] rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden
                                     ${isDragging
-                                        ? 'border-blue-500 bg-blue-500/10 scale-105 shadow-xl'
-                                        : 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 hover:border-zinc-500'
+                                        ? 'border-[var(--accent)] bg-[var(--accent-soft)] scale-105 shadow-xl'
+                                        : 'border-white/[0.1] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.15]'
                                     }`}
                             >
                                 <input
@@ -341,18 +308,16 @@ const PersonaPage: React.FC = () => {
                                     accept="image/*"
                                     className="hidden"
                                 />
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-transform ${isDragging ? 'bg-blue-500 scale-110' : 'bg-zinc-700 group-hover:scale-110'}`}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 ${isDragging ? 'text-white' : 'text-zinc-300'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                    </svg>
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-transform ${isDragging ? 'bg-[var(--accent)] scale-110' : 'bg-white/[0.06] group-hover:scale-110'}`}>
+                                    <Upload size={24} className={`${isDragging ? 'text-white' : 'text-zinc-300'}`} />
                                 </div>
-                                <p className={`text-base font-medium ${isDragging ? 'text-blue-400' : 'text-zinc-200'}`}>
+                                <p className={`text-base font-medium ${isDragging ? 'text-[var(--accent)]' : 'text-zinc-200'}`}>
                                     {isDragging ? 'Drop Image Here' : 'Click or Drag to Upload'}
                                 </p>
-                                <p className="text-xs text-zinc-500 mt-1">Start your creation</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-1">Start your creation</p>
                             </div>
                         ) : (
-                            <div className="relative w-full aspect-[3/4] max-h-[50vh] md:max-h-[55vh] rounded-2xl overflow-hidden group shadow-2xl border border-zinc-700">
+                            <div className="relative w-full aspect-[3/4] max-h-[50vh] md:max-h-[55vh] rounded-2xl overflow-hidden group shadow-2xl border border-white/[0.08]">
                                 <img
                                     src={uploadedImage}
                                     alt="Uploaded"
@@ -363,18 +328,14 @@ const PersonaPage: React.FC = () => {
                                         onClick={handleClearImage}
                                         className="px-4 py-2 bg-red-500/90 text-white rounded-full text-sm font-medium hover:bg-red-600 transition-colors flex items-center gap-2 backdrop-blur-sm"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
+                                        <Trash2 size={16} />
                                         Remove
                                     </button>
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         className="px-4 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2 shadow-lg"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                                        </svg>
+                                        <RefreshCw size={16} />
                                         Change Photo
                                     </button>
                                     <input
@@ -389,38 +350,36 @@ const PersonaPage: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Create Button - appears after photo upload */}
-                    <div className={`mt-6 transition-all duration-500 ${uploadedImage ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 pointer-events-none'}`}>
-                        <button
-                            onClick={handleCreate}
-                            disabled={isNavigating}
-                            className="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-base transition-all duration-200 bg-blue-600 text-white rounded-full hover:scale-105 hover:bg-blue-500 hover:shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] shadow-2xl ring-2 ring-white/10 disabled:opacity-80 disabled:scale-100 disabled:cursor-wait whitespace-nowrap"
-                        >
-                            {isNavigating ? (
-                                <span className="flex items-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    Starting...
-                                </span>
-                            ) : (
-                                <span className="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                    </svg>
-                                    Create Poster
-                                </span>
-                            )}
-                        </button>
-                    </div>
                 </div>
 
-                {/* PANE 2 (DOM Second): Visuals (Poster & Share) */}
-                {/* Mobile: Bottom | Desktop: Left (due to flex-row-reverse) */}
-                <div className="w-full md:w-1/2 flex-shrink-0 bg-zinc-900/30 md:border-r border-zinc-800/50 flex flex-col justify-center">
+                {/* FLOATING ACTION BUTTON */}
+                <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${uploadedImage ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'}`}>
+                    <button
+                        onClick={handleCreate}
+                        disabled={isNavigating}
+                        className="group relative inline-flex items-center justify-center px-10 py-4 font-bold text-lg transition-all duration-300 rounded-full hover:scale-105 shadow-2xl disabled:opacity-80 disabled:scale-100 disabled:cursor-wait whitespace-nowrap fab-gradient"
+                    >
+                        {isNavigating ? (
+                            <span className="flex items-center gap-3">
+                                <Postey size={26} mood="directing" dark />
+                                Starting...
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-3">
+                                <Postey size={26} mood="idle" dark />
+                                Create Poster
+                            </span>
+                        )}
+                    </button>
+                </div>
+
+                {/* PANE 2: Visuals (Poster & Share) */}
+                <div className="w-full md:w-1/2 flex-shrink-0 bg-white/[0.02] md:border-r border-white/[0.06] flex flex-col justify-center">
                     <div className="p-4 md:p-6 flex flex-col items-center justify-center">
 
                         <div className="relative w-full max-w-sm md:max-h-full md:flex md:flex-col md:justify-center">
-                            {/* Persona Cover - constrained height */}
-                            <div className="relative aspect-[2/3] w-full max-h-[45vh] md:max-h-[80vh] rounded-2xl overflow-hidden shadow-2xl border border-zinc-700/50 mx-auto">
+                            {/* Persona Cover */}
+                            <div className="relative aspect-[2/3] w-full max-h-[45vh] md:max-h-[80vh] rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08] mx-auto">
                                 <img
                                     src={persona.cover}
                                     alt={persona.name}
@@ -428,7 +387,7 @@ const PersonaPage: React.FC = () => {
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                                 <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                                    <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-widest mb-1 block">
+                                    <span className="text-[10px] text-[var(--text-secondary)] font-medium uppercase tracking-widest mb-1 block">
                                         {persona.category}
                                     </span>
                                     <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
@@ -442,22 +401,18 @@ const PersonaPage: React.FC = () => {
                                 onClick={handleShare}
                                 className={`mt-3 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border transition-all duration-200 text-sm
                                     ${linkCopied
-                                        ? 'bg-green-500/20 border-green-500/50 text-green-400'
-                                        : 'bg-zinc-800/50 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-600 hover:text-white'
+                                        ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+                                        : 'bg-white/[0.03] border-white/[0.06] text-zinc-300 hover:bg-white/[0.06] hover:border-white/[0.1] hover:text-white'
                                     }`}
                             >
                                 {linkCopied ? (
                                     <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                        </svg>
+                                        <Check size={16} />
                                         Link Copied!
                                     </>
                                 ) : (
                                     <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-                                        </svg>
+                                        <Share2 size={16} />
                                         Share This Poster
                                     </>
                                 )}
@@ -468,18 +423,17 @@ const PersonaPage: React.FC = () => {
             </div>
 
             {/* Trending Personas Section */}
-            <div className="w-full bg-[#09090b] border-t border-zinc-800/50 py-12 px-6 md:px-12 z-10 relative">
+            <div className="w-full bg-[var(--bg)] border-t border-white/[0.06] py-12 px-6 md:px-12 z-10 relative">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h2 className="text-2xl font-bold text-white mb-2">Trending Now</h2>
-
                         </div>
                         <button
                             onClick={() => navigate('/')}
-                            className="text-sm font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1 group"
+                            className="text-sm font-medium text-[var(--text-secondary)] hover:text-white transition-colors flex items-center gap-1 group"
                         >
-                            View All <span className="group-hover:translate-x-1 transition-transform">→</span>
+                            View All <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
                         </button>
                     </div>
 
@@ -500,8 +454,6 @@ const PersonaPage: React.FC = () => {
                             ))
                         }
                     </div>
-
-
                 </div>
             </div>
         </div>
